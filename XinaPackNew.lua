@@ -377,6 +377,192 @@ addTextEdit("specplayer", storage[specName .. name].specplayer or "alvo", functi
 end)
 
 
+addSeparator("sep", mainTab)
+function comboScript(parent)
+  if not parent then
+    parent = panel
+  end
+local panelName = "comboScriptPanel"
+ 
+  local ui = setupUI([[
+ThreeRowsItems < Panel
+  height: 99
+  margin-top: 2
+  
+  BotItem
+    id: item1
+    anchors.top: parent.top
+    anchors.left: parent.left
+
+  BotItem
+    id: item2
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+
+  BotItem
+    id: item3
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+
+  BotItem
+    id: item4
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+
+  BotItem
+    id: item5
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item6
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    margin-top: 2
+
+  BotItem
+    id: item7
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item8
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item9
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item10
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item11
+    anchors.top: prev.bottom
+    anchors.left: parent.left
+    margin-top: 2
+    
+  BotItem
+    id: item12
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item13
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item14
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+    
+  BotItem
+    id: item15
+    anchors.top: prev.top
+    anchors.left: prev.right
+    margin-left: 2
+
+Panel
+  height: 135
+
+  SmallBotSwitch
+    id: title
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    text-align: center
+
+  HorizontalScrollBar
+    id: scroll1
+    anchors.left: title.left
+    anchors.right: title.right
+    anchors.top: title.bottom
+    margin-right: 2
+    margin-top: 2
+    minimum: 1
+    maximum: 60
+    step: 1
+
+  ThreeRowsItems
+    id: items
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom  
+  ]], parent)
+  ui:setId(panelName)
+ 
+  if not storage[panelName] then
+    storage[panelName] = {
+      time = 31
+    }
+  end
+ 
+  local updateText = function()
+    ui.title:setText("Use every " .. storage[panelName].time .. " minutes")  
+  end
+ 
+  ui.scroll1.onValueChange = function(scroll, value)
+    storage[panelName].time = value
+    updateText()
+  end
+ 
+  ui.scroll1:setValue(storage[panelName].time)
+ 
+  ui.title:setOn(storage[panelName].enabled)
+  ui.title.onClick = function(widget)
+    storage[panelName].enabled = not storage[panelName].enabled
+    widget:setOn(storage[panelName].enabled)
+  end
+ 
+  if type(storage[panelName].items) ~= 'table' then
+    storage[panelName].items = { 3215, 9642, 3726, 11454, 945, 10293, 10306, 10316, 11455 }
+  end
+ 
+  for i=1,15 do
+    ui.items:getChildByIndex(i).onItemChange = function(widget)
+      storage[panelName].items[i] = widget:getItemId()
+    end
+    ui.items:getChildByIndex(i):setItemId(storage[panelName].items[i])    
+  end
+ 
+  macro(1000, function()
+    if not storage[panelName].enabled then
+      return
+    end
+
+    if #storage[panelName].items > 0 then
+      timeOut = 5000
+      for _, itemToUse in pairs(storage[panelName].items) do
+        schedule(timeOut, function()
+          use(itemToUse)
+        end)
+        timeOut = timeOut + 500
+      end
+    end
+    schedule(timeOut + 5000, function()
+    end)
+    delay((storage[panelName].time * 60000) - 1000)
+  end)
+end
+comboScript(mainTab)
+addSeparator("sep", mainTab)
+
 
 
 
