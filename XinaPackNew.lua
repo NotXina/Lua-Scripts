@@ -82,18 +82,18 @@ macro(50,function()
   end
 end)
 
-local function checkPos(x, y)
-xyz = g_game.getLocalPlayer():getPosition()
-xyz.x = xyz.x + x
-xyz.y = xyz.y + y
-tile = g_map.getTile(xyz)
-if tile then
-  return g_game.use(tile:getTopUseThing())
-else
-  return false
-end
-end
 
+local function checkPos(x, y)
+ xyz = g_game.getLocalPlayer():getPosition()
+ xyz.x = xyz.x + x
+ xyz.y = xyz.y + y
+ tile = g_map.getTile(xyz)
+ if tile then
+  return g_game.use(tile:getTopUseThing())  
+ else
+  return false
+ end
+end
 
 
 bugMap = macro(1, function() 
@@ -113,6 +113,32 @@ bugMapIcon = addIcon("Bug Map", {item=3368, text="DASH", hotkey="NumPad0"}, func
   modules.game_console.consoleTextEdit:setVisible(not isOn)
   bugMap.setOn(isOn)
  end)
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ local gamePanel = modules.game_interface.gameMapPanel
+
+gamePanel.onMouseWheel = function(widget, mousePos, scroll)
+  if scroll == 1 then --scroll up
+    say("exani hur up")
+  elseif scroll == 2 then --scroll down
+    say("exani hur down")
+  end
+end
+
+
+
+
+
+
+
 
 local cIcon = addIcon("cI",{text="Cave\nBot",switchable=false,moveable=true}, function()
   if CaveBot.isOff() then 
