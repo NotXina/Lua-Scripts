@@ -82,6 +82,20 @@ macro(50,function()
   end
 end)
 
+local function checkPos(x, y)
+xyz = g_game.getLocalPlayer():getPosition()
+xyz.x = xyz.x + x
+xyz.y = xyz.y + y
+tile = g_map.getTile(xyz)
+if tile then
+  return g_game.use(tile:getTopUseThing())
+else
+  return false
+end
+end
+
+
+
 bugMap = macro(1, function() 
  if modules.corelib.g_keyboard.isKeyPressed('Up') or modules.corelib.g_keyboard.isKeyPressed('w')  then
   checkPos(0, -5)
