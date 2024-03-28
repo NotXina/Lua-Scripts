@@ -439,14 +439,6 @@ macro(50, "Attack Leader", nil, function()
         end
     end
 end)
-
-local specName = "alvo"
-
-if not storage[specName .. name] then
-storage[specName .. name] = {
-    specplayer = "Alvo"
-}
-end
 	
 
 addTextEdit("attackLeader", storage[panelName .. name].attackLeader or "Nome do Lider", function(widget, lidertext)
