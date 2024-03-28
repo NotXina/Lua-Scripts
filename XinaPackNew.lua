@@ -421,7 +421,8 @@ macro(50,function()
   end
 end)
 
-setDefaultTab("Main")
+
+
 
   local panelName = "advancedFriendHealer"
   local ui = setupUI([[
@@ -686,16 +687,6 @@ addSeparator()
  
  
  
-
-
-
-
-
-
-
-
-
-local toolsTab = addTab("Tools")
 local UE = "Magia de Area"
 
 if not storage[UE .. name] then
@@ -724,7 +715,7 @@ local specName = "alvo"
 
 if not storage[specName .. name] then
 storage[specName .. name] = {
-    specplayer = "Racumin"
+    specplayer = "Alvo"
 }
 end
 
@@ -749,7 +740,7 @@ addTextEdit("specplayer", storage[specName .. name].specplayer or "alvo", functi
 end)
 
 
-addSeparator("sep", mainTab)
+addSeparator()
 function comboScript(parent)
   if not parent then
     parent = panel
@@ -933,7 +924,7 @@ Panel
   end)
 end
 comboScript(mainTab)
-addSeparator("sep", mainTab)
+addSeparator()
 
 local panelName = "Dummy Train"
 local ui = setupUI([[
