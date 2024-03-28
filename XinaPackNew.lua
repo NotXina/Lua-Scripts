@@ -1087,35 +1087,3 @@ macro(1, "Mining", function()
         return autoWalk(getClosestPosition(possibleMine), moveDist, {ignoreNonPathable=true, precision=1})
     end
 end)
-
-
-local MineName = "alvo"
-
-if not storage[MineName .. name] then
-storage[MineName .. name] = {
-    specplayer = "SeuChar"
-}
-end
-
-addTextEdit("minechar", storage[MineChar .. name].minechar or "SeuChar", function(widget, SeuChar)
-    storage[MineChar .. name].minechar = SeuChar
-
-macro(60000, "Depositar", function()
-    say("!depositall")
-end)
-
-macro(65000, "Depositar Min", function()
-say("!mining deposit")
-end)
-
-macro(70000, "transfer", function()
-say("!transfer '..MineName()..', 1000000")
-end)
-
-macro(80000, "transfer min", function()
-say("!mining Transfer, '..MineName()..', 100")
-end)
-
-
-
-
