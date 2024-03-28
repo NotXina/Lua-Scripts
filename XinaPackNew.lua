@@ -484,36 +484,6 @@ atack_enemy.setOn(isOn)
 end)
 
 
-local specName = "alvo"
-
-if not storage[specName .. name] then
-storage[specName .. name] = {
-    specplayer = "Alvo"
-}
-end
-
-macro(100, "Atack Fixed Player", function()
-
-if not g_game.isAttacking() or g_game.getAttackingCreature():getName() ~= storage[specName .. name].specplayer then
-
-
-       for i, spec in ipairs(getSpectators()) do
-		local xname = spec:getName()
-			 if spec:isPlayer() and spec:getName() == storage[specName .. name].specplayer then
-                g_game.attack(spec)
-            end
-		end
-		
-end		
-		
-end) 
-
-addTextEdit("specplayer", storage[specName .. name].specplayer or "alvo", function(widget, alvotext)
-    storage[specName .. name].specplayer = alvotext
-end)
-
-
-
 
 
 
