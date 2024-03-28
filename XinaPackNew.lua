@@ -923,8 +923,9 @@ Panel
     delay((storage[panelName].time * 60000) - 1000)
   end)
 end
-comboScript(mainTab)
+comboScript()
 addSeparator()
+
 
 local panelName = "Dummy Train"
 local ui = setupUI([[
@@ -1033,7 +1034,7 @@ end)
 
 addSeparator()
 
-UI.Label("Mineração")
+UI.Label("Mineracao")
 local mineableIds = {4461, 4460, 4465, 4464} 
 local pickId = 3456 
 local useDistance = 1 
