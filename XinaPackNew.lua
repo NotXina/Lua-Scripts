@@ -1041,6 +1041,8 @@ if not dummytrain then return true end
 end)
 
 addSeparator()
+
+UI.Label("Mineração")
 local mineableIds = {4461, 4460, 4465, 4464} 
 local pickId = 3456 
 local useDistance = 1 
