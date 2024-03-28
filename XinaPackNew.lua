@@ -385,7 +385,7 @@ Panel
     use(candidates[math.random(1, #candidates)])
   end)
 end
-staminaItems(toolsTab)
+staminaItems()
 
 
 local cIcon = addIcon("cI",{text="Cave\nBot",switchable=false,moveable=true}, function()
