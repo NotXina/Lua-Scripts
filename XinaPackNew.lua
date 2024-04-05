@@ -36,7 +36,7 @@ end)
 
 
 local wand = 651 -- wand ID 
-local itemsIds = {3554, 3369, 3567, 3420, 3414, 3366, 3364, 3392, 3320, 3281, 7407, 7387, 3079, 826, 10387, 10385, 3006, 3360, 3324, 3381, 3382, 3419, 3385, 3386, 3428} -- ID items to sell 
+local itemsIds = {3554, 3369, 3567, 3420, 3414, 3366, 3364, 3392, 3320, 3281, 7407, 7387, 3079, 826, 10387, 10385, 3006, 3360, 3324, 3381, 3382, 3419, 3385, 3386} -- ID items to sell 
 Seller = addIcon("Seller", {item = 651, text = "Seller"},
   macro(100, function()
   for i, itemId in pairs(itemsIds) do
