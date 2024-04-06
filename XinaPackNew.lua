@@ -140,41 +140,6 @@ end
 
 
 
-local cIcon = addIcon("cI",{text="Cave\nBot",switchable=false,moveable=true}, function()
-  if CaveBot.isOff() then 
-    CaveBot.setOn()
-  else 
-    CaveBot.setOff()
-  end
-end)
-cIcon:setSize({height=30,width=50})
-cIcon.text:setFont('verdana-11px-rounded')
-
-local tIcon = addIcon("tI",{text="Target\nBot",switchable=false,moveable=true}, function()
-  if TargetBot.isOff() then 
-    TargetBot.setOn()
-  else 
-    TargetBot.setOff()
-  end
-end)
-tIcon:setSize({height=30,width=50})
-tIcon.text:setFont('verdana-11px-rounded')
-
-macro(50,function()
-  if CaveBot.isOn() then
-    cIcon.text:setColoredText({"CaveBot\n","white","ON","green"})
-  else
-    cIcon.text:setColoredText({"CaveBot\n","white","OFF","red"})
-  end
-  if TargetBot.isOn() then
-    tIcon.text:setColoredText({"Target\n","white","ON","green"})
-  else
-    tIcon.text:setColoredText({"Target\n","white","OFF","red"})
-  end
-end)
-
-
-
 -- Fim dos ICONES
 
 
@@ -557,6 +522,52 @@ onCreaturePositionChange(function(creature, newPos, oldPos)
         end
     end
 end)
+
+UI.Separator()
+UI.Label("Use MW")
+macro(50, "Trapa Alvo MW", function()
+function lanca(x,y)
+	local target = g_game.getAttackingCreature()
+	local tpos = target:getPosition()
+	local pos = {x=tpos.x + x, y=tpos.y + y, z=tpos.z}
+	local tile = g_map.getTile(pos)   
+	if tile and tile:isWalkable(false) then -- if can throw magic wall
+		usewith(3180, tile:getGround()) -- use wild growth, magic wall is 3180
+	return true
+	end
+	return false
+  end
+
+local attacking = g_game.getAttackingCreature()
+	if attacking then
+		local target = g_game.getAttackingCreature()
+		local tpos = target:getPosition()
+		xx = posx()-tpos.x
+		yy = posy()-tpos.y
+		info("xx: ".. xx .. " yy: " .. yy)
+		if yy > 0 then
+			lanca(0, -1)
+			lanca(-1, -1)
+			lanca(1, -1)
+		end
+		if xx > 0 then
+			lanca(-1, -1)
+			lanca(-1, 0)
+			lanca(-1, 1)
+		end
+		if yy < 0 then
+			lanca(-1,1)
+			lanca(0,1)
+			lanca(1,1)
+		end
+		if xx < 0 then
+			lanca(1, -1)
+			lanca(1, 0)
+			lanca(1, 1)
+		end	
+	end
+end
+)
 
 
 
