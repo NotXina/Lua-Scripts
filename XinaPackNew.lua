@@ -455,28 +455,23 @@ UI.Separator()
 
 UI.Label("Ataca os Players em sua Enemy List")
 
-atack_enemy = macro(100, "Attack Players","Delete", function()
- local highestAmount = 100  
+atack_enemy = macro(100, "Attack Players","DElete", function()
+  local highestAmount = 100  
   local targetPlayer
-  if isInPz() then return end
   for i, creature in ipairs(getSpectators(posz(), false)) do
     if creature:isPlayer() then
       local cname = creature:getName()
-      --if isEnemy(cname) then    
-        --if creature:getShield() < 3 and creature:getEmblem() ~= 1 then
+      if cname ~= name() and not isFriend(cname) then
+        if creature:getShield() < 3 and creature:getEmblem() ~= 1 then
           local valHp = creature:getHealthPercent()
           if valHp <= highestAmount then
-            local cPos = creature:getPosition()
-            local cTile = g_map.getTile(cPos)
-            if cTile and cTile:canShoot() then
-              highestAmount = valHp
-              targetPlayer = creature
-            end
+            highestAmount = valHp
+            targetPlayer = creature
           end
-        --end
+        end
       end
     end
- -- end
+  end
   if targetPlayer then
     if not g_game.isAttacking() or g_game.getAttackingCreature() ~= targetPlayer then
       g_game.attack(targetPlayer)
