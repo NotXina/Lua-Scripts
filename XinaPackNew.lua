@@ -462,7 +462,7 @@ atack_enemy = macro(100, "Attack Players","Delete", function()
   for i, creature in ipairs(getSpectators(posz(), false)) do
     if creature:isPlayer() then
       local cname = creature:getName()
-      if isEnemy(cname) then    
+      --if isEnemy(cname) then    
         --if creature:getShield() < 3 and creature:getEmblem() ~= 1 then
           local valHp = creature:getHealthPercent()
           if valHp <= highestAmount then
@@ -473,7 +473,7 @@ atack_enemy = macro(100, "Attack Players","Delete", function()
               targetPlayer = creature
             end
           end
-        end
+        --end
       end
     end
  -- end
