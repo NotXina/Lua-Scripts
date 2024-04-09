@@ -453,7 +453,7 @@ end)
 UI.Separator()
 
 
-UI.Label("Ataca os Players em sua Enemy List")
+UI.Label("Ataca os Players fora da Guild")
 
 atack_enemy = macro(100, "Attack Players","DElete", function()
   local highestAmount = 100  
@@ -517,9 +517,6 @@ onCreaturePositionChange(function(creature, newPos, oldPos)
         end
     end
 end)
-
-UI.Separator()
-UI.Label("Use MW")
 macro(50, "Trapa Alvo MW", function()
 function lanca(x,y)
 	local target = g_game.getAttackingCreature()
@@ -934,111 +931,6 @@ end
 comboScript()
 addSeparator()
 
-
-local panelName = "Dummy Train"
-local ui = setupUI([[
-Panel
-  height: 30
-
-  BotItem
-    id: item
-    anchors.top: parent.top
-    anchors.left: parent.left
-
-  BotItem
-    id: Target
-    anchors.top: parent.top
-    anchors.right: parent.right
-    margin-left: 2
-
-  BotSwitch
-    id: title
-    anchors.top: Target.top
-    anchors.left: item.right
-    anchors.right: parent.right
-    anchors.bottom: parent.bottom
-    text-align: center
-    !text: tr('Dummy Train')
-    margin-top: 4
-    margin-left: 6
-    margin-right: 40
-
-]], parent)
-ui:setId(panelName)
-
-if not storage[panelName] then
-  storage[panelName] = {
-      id = 28557,
-      id2 = 28559,
-      title = enabled,
-      enabled = false,
-  }
-end
-
-ui.title:setOn(storage[panelName].enabled)
-ui.title.onClick = function(widget)
-  storage[panelName].enabled = not storage[panelName].enabled
-  widget:setOn(storage[panelName].enabled)
-end
-
-ui.item.onItemChange = function(widget)
-  storage[panelName].id = widget:getItemId()
-end
-ui.item:setItemId(storage[panelName].id)
-
-ui.Target.onItemChange = function(widget)
-  storage[panelName].id2 = widget:getItemId()
-end
-ui.Target:setItemId(storage[panelName].id2)
-
-function setDummyOff()
-  storage[panelName].enabled = false
-  ui.title:setOn(false)
-end
-
-function setDummyOn()
-  storage[panelName].enabled = true
-  ui.title:setOn(true)
-end
-
-local istraining = false
-
-dummytrain = macro(2000, function()
-if istraining == true then return true end
-if not storage[panelName].enabled then return end
-	for _, tile in ipairs(g_map.getTiles(posz())) do
-		if getDistanceBetween(pos(), tile:getPosition()) <= 7 then
-		local item = tile:getTopUseThing()
-		local exercise = findItem(storage[panelName].id)
-			if exercise and item and item:getId() == storage[panelName].id2 then
-				useWith(storage[panelName].id, item)
-					
-			end
-		end
-	end
-end)
-
-onTextMessage(function(mode, text)
-if not dummytrain then return true end
-	if mode == 18 then
-		if text:lower():find("you started training.") then
-			istraining = true
-		end
-	elseif mode == 17 then
-		if text:lower():find("you are already training.") then
-			istraining = true
-		end
-	end
-end)
-
-onTextMessage(function(mode, text)
-if not dummytrain then return true end
-	if mode == 18 then
-		if text:lower():find("you stopped exercising because you changed your position.") or text:lower():find("your training session has stopped because your weapon charges are gone.") then
-			istraining = false
-		end
-	end
-end)
 
 addSeparator()
 
