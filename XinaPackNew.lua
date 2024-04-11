@@ -452,43 +452,6 @@ end)
 
 UI.Separator()
 
-
-UI.Label("Ataca os Players fora da Guild")
-
-atack_enemy = macro(100, "Attack Players","DElete", function()
-  local highestAmount = 100  
-  local targetPlayer
-  for i, creature in ipairs(getSpectators(posz(), false)) do
-    if creature:isPlayer() then
-      local cname = creature:getName()
-      if cname ~= name() and not isFriend(cname) then
-        if creature:getShield() < 3 and creature:getEmblem() ~= 1 then
-          local valHp = creature:getHealthPercent()
-          if valHp <= highestAmount then
-            highestAmount = valHp
-            targetPlayer = creature
-          end
-        end
-      end
-    end
-  end
-  if targetPlayer then
-    if not g_game.isAttacking() or g_game.getAttackingCreature() ~= targetPlayer then
-      g_game.attack(targetPlayer)
-    end
-  end
-end)
-
-addIcon("Atk_enemy", {item=5668, text="Kill"}, function(icon, isOn)
-atack_enemy.setOn(isOn)
-end)
-
-
-
-
-
-UI.Separator()
-
 UI.Label("Use MW")
 
 local toggle = macro(10, "Mwall Step", "F12",function() end) -- taca mw no sqm anterior
