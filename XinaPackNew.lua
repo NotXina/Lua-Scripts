@@ -116,29 +116,6 @@ bugMapIcon = addIcon("Bug Map", {item=3368, text="DASH", hotkey="NumPad0"}, func
  
  
  
- 
- 
- 
- 
- 
- 
- 
- local gamePanel = modules.game_interface.gameMapPanel
-
-gamePanel.onMouseWheel = function(widget, mousePos, scroll)
-  if scroll == 1 then --scroll up
-    say("exani hur up")
-  elseif scroll == 2 then --scroll down
-    say("exani hur down")
-  end
-end
-
-
-
-
-
-
-
 
 -- Fim dos ICONES
 
