@@ -6,6 +6,29 @@ warning = function()
 end
 
 --ICONES
+for _, iconData in ipairs(runeIcons) do
+    local iconId = iconData.iconItemId
+    local name = iconData.name
+    local rune = iconData.rune
+    local dist = iconData.dist
+    local safeMode = iconData.safeMode
+    local mobQty = iconData.mobQty or 0
+
+    addIcon("runeIcon"..name, {item={id=iconId, count=1}, text=name}, macro(100, function(m)
+        local target = g_game.getAttackingCreature()
+        if target then
+            if safeMode and not isSafe(8) then return end     
+            if getMonstersInRange(pos(), 8) < mobQty then return end
+            local targetPos = target:getPosition()
+            if distanceFromPlayer(targetPos) > dist then return end       
+            g_game.useWith(Item.create(rune), target)
+            delay(500)
+        end
+    end))
+end
+
+
+
 mage_sd= macro(200,function()
     if g_game.isAttacking() then
         usewith(3155, g_game.getAttackingCreature())
