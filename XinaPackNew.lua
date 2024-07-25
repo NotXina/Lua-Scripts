@@ -84,7 +84,6 @@ do
     edit.defaultLeftItem:setItemId(config.defaultLeftItemId)
     edit.defaultLeftItem.onItemChange = function(self)
         config.defaultLeftItemId = self:getItemId()
-        rune = self:getItemId()
     end
 end
 
@@ -101,7 +100,7 @@ runemax = macro(100, function()
 end)
 
 
-addIcon("runemax", {item = rune, text="RuneMAX"}, function(icon, isOn)
+addIcon("runemax", {item = defaultLeftItemId, text="RuneMAX"}, function(icon, isOn)
 runemax.setOn(isOn)
 end)
 
