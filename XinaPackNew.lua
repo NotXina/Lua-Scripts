@@ -901,37 +901,3 @@ Panel
 end
 comboScript()
 addSeparator()
-
-setDefaultTab("Cave")
-function toggleCavebot()
-  if manapercent() < 30 and CaveBot.isOn() then
-    CaveBot.setOff()
-  elseif manapercent() > 60 and CaveBot.isOff() then
-    CaveBot.setOn()
-  end
-end
-
-macro(1000, "Mana Check", function()
-  toggleCavebot()
-end)
-UI.Separator()
-local UE = "Magia de Area"
-if not storage[UE .. name] then
-storage[UE .. name] = {
-    AOEspell = "Exevo gran mas pox"
-}
-end
-
-macro(1000, "Safe SD/Mas Vis", function()
-  local target = g_game.getAttackingCreature()
-  if not target then return end
-  if isSafe(8) and manapercent() >= 70 then
-    say(storage[UE .. name].AOEspell)
-  else
-    usewith(3155, g_game.getAttackingCreature())
-  end
-end)
-
-addTextEdit("AOEspell", storage[UE .. name].AOEspell or "Exevo gran mas pox", function(widget, uetext)
-    storage[UE .. name].AOEspell = uetext
-end)
