@@ -147,6 +147,18 @@ bugMapIcon = addIcon("Bug Map", {item=3368, text="DASH", hotkey="NumPad0"}, func
 
 -- Fim dos ICONES
 
+function toggleCavebot()
+  if manapercent() < 30 and CaveBot.isOn() then
+    CaveBot.setOff()
+  elseif manapercent() > 60 and CaveBot.isOff() then
+    CaveBot.setOn()
+  end
+end
+
+macro(1000, "Mana Check", function()
+  toggleCavebot()
+end)
+
 
  local panelName = "advancedFriendHealer"
   local ui = setupUI([[
