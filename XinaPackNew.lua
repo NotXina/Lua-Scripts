@@ -6,23 +6,106 @@ warning = function()
 end
 
 --ICONES
-mage_sd= macro(200,function()
-    if g_game.isAttacking() then
-        usewith(3155, g_game.getAttackingCreature())
+local ui = setupUI([[
+Panel
+  height: 19
+
+  BotSwitch
+    id: title
+    anchors.top: parent.top
+    anchors.left: parent.left
+    text-align: center
+    width: 130
+    font: verdana-11px-rounded
+    !text: tr('Runa')
+
+  Button
+    id: edit
+    anchors.top: prev.top
+    anchors.left: prev.right
+    anchors.right: parent.right
+    margin-left: 3
+    height: 17
+    text: Setup
+    font: verdana-11px-rounded
+]])
+
+local edit = setupUI([[
+RevideBox < CheckBox
+  font: verdana-11px-rounded
+  margin-top: 5
+  margin-left: 5
+  anchors.top: prev.bottom
+  anchors.left: parent.left
+  anchors.right: parent.right
+  color: lightGray
+
+Panel
+  height: 60
+
+  BotItem
+    id: defaultLeftItem
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-left: 5
+    margin-top: 17
+
+]])
+edit:hide()
+
+local showEdit = false
+ui.edit.onClick = function(widget)
+    showEdit = not showEdit
+    if showEdit then
+        edit:show()
+    else
+        edit:hide()
     end
-end)
-addIcon("mage_sd", {item=3155, text="SDMAX"}, function(icon, isOn)
-mage_sd.setOn(isOn)
+end
+
+-- Storage
+local st = "Rune"
+storage[st] = storage[st] or {
+    enabled = false,
+    defaultLeftItemId = 1,
+}
+local config = storage[st]
+
+-- UI Functions
+-- Main Button
+ui.title:setOn(config.enabled)
+ui.title.onClick = function(widget)
+    config.enabled = not config.enabled
+    widget:setOn(config.enabled)
+end
+
+
+do
+    edit.defaultLeftItem:setItemId(config.defaultLeftItemId)
+    edit.defaultLeftItem.onItemChange = function(self)
+        config.defaultLeftItemId = self:getItemId()
+        rune = self:getItemId()
+    end
+end
+
+
+
+
+runemax = macro(100, function()
+  local target = g_game.getAttackingCreature()
+  if not storage[st].enabled then return; end
+  if not g_game.isAttacking() then return; end
+  if not target:canShoot() then return; end
+  useWith(config.defaultLeftItemId, target)
+  delay(500)
 end)
 
-mage_lyze = macro(200,function()
-    if g_game.isAttacking() then
-        usewith(3165, g_game.getAttackingCreature())
-    end
+
+addIcon("runemax", {item = rune, text="RuneMAX"}, function(icon, isOn)
+runemax.setOn(isOn)
 end)
-addIcon("mage_lyze", {item=3165, text="PARAMAX"}, function(icon, isOn)
-mage_lyze.setOn(isOn)
-end)
+
+
 
 Pally_PvP= macro(500, function()
   if g_game.isAttacking() then
