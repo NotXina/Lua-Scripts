@@ -90,7 +90,7 @@ end
 
 
 
-runemax = macro(100, function()
+macro(100, function()
   local target = g_game.getAttackingCreature()
   if not storage[st].enabled then return; end
   if not g_game.isAttacking() then return; end
@@ -98,13 +98,6 @@ runemax = macro(100, function()
   useWith(config.defaultLeftItemId, target)
   delay(500)
 end)
-
-
-addIcon("runemax", {item = defaultLeftItemId, text="RuneMAX"}, function(icon, isOn)
-runemax.setOn(isOn)
-end)
-
-
 
 Pally_PvP= macro(500, function()
   if g_game.isAttacking() then
