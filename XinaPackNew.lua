@@ -1006,7 +1006,7 @@ addTextEdit("pot", storage.Pot or "", function(widget, text)
 end) 
 addSeparator()
 
-atkall = macro(100, function()
+macro(100,"Atk - Enemy","Delete", function()
   local highestAmount = 100  
   local targetPlayer
   for i, creature in ipairs(getSpectators(posz(), false)) do
@@ -1030,5 +1030,4 @@ atkall = macro(100, function()
   end
 end)
 
-addIcon("AtkAll", {item=9388, count=1, text= "ATK-ALL", hotkey="Delete"}, atkall)
 
