@@ -983,3 +983,52 @@ Panel
 end
 comboScript()
 addSeparator()
+
+macro(200, "Potar Amigo", function()
+  for _, creature in pairs(getSpectators(posz())) do
+  local heal_player = creature:getName();
+  if (heal_player == storage.Friend) then
+  if isInPz() then
+    useWith(tonumber(storage.Pot), creature)
+  end
+  end
+  end
+end)
+
+addLabel("name", "Nome do Amigo:")
+addTextEdit("friend", storage.Friend or "", function(widget, text)    
+  storage.Friend = text
+end) 
+
+addLabel("name", "ID POT:")
+addTextEdit("pot", storage.Pot or "", function(widget, text)    
+  storage.Pot = text
+end) 
+addSeparator()
+
+atkall = macro(100, "Attack Players","DElete", function()
+  local highestAmount = 100  
+  local targetPlayer
+  for i, creature in ipairs(getSpectators(posz(), false)) do
+    if creature:isPlayer() then
+      local cname = creature:getName()
+      if cname ~= name() and not isFriend(cname) then
+        if creature:getShield() < 3 and creature:getEmblem() ~= 1 then
+          local valHp = creature:getHealthPercent()
+          if valHp <= highestAmount then
+            highestAmount = valHp
+            targetPlayer = creature
+          end
+        end
+      end
+    end
+  end
+  if targetPlayer then
+    if not g_game.isAttacking() or g_game.getAttackingCreature() ~= targetPlayer then
+      g_game.attack(targetPlayer)
+    end
+  end
+end)
+
+addIcon("AtkAll", {item={id=9388, count=1}, text= "ATK-ALL"}, atkall)
+
