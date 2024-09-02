@@ -1030,5 +1030,5 @@ atkall = macro(100, function()
   end
 end)
 
-addIcon("AtkAll", {item={id=9388, count=1}, text= "ATK-ALL", hotkey="Delete"}, atkall)
+addIcon("AtkAll", {item=9388, count=1, text= "ATK-ALL", hotkey="Delete"}, atkall)
 
