@@ -40,7 +40,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina Core`) em 7 seções. Inclui combate e combo (Attack Players, Auto SD, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido** e Smart Energy Ring), movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Vende Tudo**) e HUD. Controles e botões Setup ficam em linhas separadas; tudo inicia desligado. |
+| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina Core`) em 7 seções. Inclui combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido** e Smart Energy Ring), movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Vende Tudo**) e HUD. Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (só solta a área quando não acerta amigo), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
@@ -132,11 +132,19 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **TargetHUD.lua** | Mostra no topo da tela o nick, HP% e distância do alvo atual. |
+| **TargetHUD.lua** | Mostra no topo central da tela o nome, tipo, HP% e distância da criatura atacada; sem alvo exibe uma mensagem de espera. |
 | **StatusExpWidget.lua** | Widget compacto e arrastável com status e experiência, salvando a posição na tela entre sessões. |
 | **MinimapCoords.lua** | Exibe as coordenadas X, Y e Z no canto inferior do minimapa. |
-| **CaveBotTargetBotIcons.lua** | Ícones arrastáveis para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). |
+| **CaveBotTargetBotIcons.lua** | Ícones arrastáveis para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). Esses ícones também ficam dentro do XinaCorePack. |
 | **TelaLimpa.lua** | Botão para ocultar textos laranjas, efeitos de magias, danos animados, mensagens do sistema e mísseis. Mensagens que contenham `says:` são preservadas. |
+
+### Como usar o Target HUD
+
+O Target HUD aparece no topo central da tela. Ele começa mostrando `TARGET HUD: nenhum alvo`
+para confirmar que está carregado e, ao atacar uma criatura, passa a mostrar nome, tipo, HP e
+distância. Ele acompanha o alvo retornado pelo ataque atual (`g_game.getAttackingCreature()`),
+portanto não mostra informações de uma criatura apenas por passar o mouse sobre ela. No painel
+`Xina Core`, deixe a macro **Target HUD** ligada.
 
 ---
 
@@ -159,7 +167,8 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 ## Observações
 
 - Os **IDs de itens e runas** seguem o padrão do Tibia global; em OTServs customizados pode ser
-  necessário ajustá-los no topo de cada script.
+  necessário ajustá-los no topo de cada script. No XinaCorePack, os ícones usam SD `3155`,
+  Paralyze `3165` e Avalanche `3161`.
 - Scripts marcados com *Setup Window* criam uma janela de configuração própria e salvam os
   valores em `storage`, persistindo entre sessões.
 - Vários scripts usam o mesmo módulo (ex.: `MWSelfStep` também existe dentro de
