@@ -267,8 +267,7 @@ do
 storage.xcSafeSd = storage.xcSafeSd or {
   enabled = false,
   Spell = "exevo gran mas frigo",
-  safeRange = 8,
-  targetDistance = 4
+  safeRange = 8
 }
 local settings = storage.xcSafeSd
 
@@ -297,15 +296,15 @@ XcSafeSdWindow < MainWindow
     margin-top: 8
 
   Label
-    id: rangeLabel
+    id: safeRangeLabel
     text-align: center
-    text: Distancia Maxima UE: 4 SQMs
+    text: Raio para comparar shield: 8 SQMs
     margin-top: 3
 
   HorizontalScrollBar
-    id: distScroll
+    id: safeRangeScroll
     minimum: 1
-    maximum: 7
+    maximum: 8
     step: 1
     margin-top: 3
 
@@ -330,11 +329,11 @@ xcSafeSdWindow.spellText.onTextChange = function(w, text)
   settings.Spell = text
 end
 
-xcSafeSdWindow.distScroll:setValue(settings.targetDistance or 4)
-xcSafeSdWindow.rangeLabel:setText("Distancia Maxima UE: " .. (settings.targetDistance or 4) .. " SQMs")
-xcSafeSdWindow.distScroll.onValueChange = function(w, v)
-  settings.targetDistance = v
-  xcSafeSdWindow.rangeLabel:setText("Distancia Maxima UE: " .. v .. " SQMs")
+xcSafeSdWindow.safeRangeScroll:setValue(settings.safeRange or 8)
+xcSafeSdWindow.safeRangeLabel:setText("Raio para comparar shield: " .. (settings.safeRange or 8) .. " SQMs")
+xcSafeSdWindow.safeRangeScroll.onValueChange = function(w, v)
+  settings.safeRange = v
+  xcSafeSdWindow.safeRangeLabel:setText("Raio para comparar shield: " .. v .. " SQMs")
 end
 
 xcSafeSdWindow.closeButton.onClick = function()
@@ -375,22 +374,22 @@ ui.setup.onClick = function()
   xcSafeSdWindow:focus()
 end
 
--- Verifica se tem amigo (party, guild ou lista de amigos) perto o bastante
--- para ser atingido pela área. Não usa isSafe()/isFriend() puros do vBot
--- porque isFriend() NÃO reconhece membro de guild (sem emblema) como amigo,
--- e só reconhece membro de party se a opção "Group Members" da Player List
--- do vBot estiver ligada. Checar o shield (party) e o emblem (guild/ally)
--- diretamente evita soltar UE em cima de guild/party, igual aos outros
--- modulos deste pack (Attack Players, UH No Time, etc).
-local function hasFriendNearby(range)
-  local pPos = pos()
-  for _, spec in ipairs(getSpectators(posz(), false) or {}) do
+-- A única trava da UE é encontrar, no mesmo andar e dentro do raio,
+-- outro jogador cujo shield seja diferente do shield do personagem local.
+-- Não há bloqueio separado por guild, party, amizade ou distância do alvo.
+local function hasDifferentShieldNearby(range)
+  local localPlayer = g_game.getLocalPlayer()
+  if not localPlayer then return false end
+
+  local myShield = localPlayer:getShield() or 0
+  local pPos = localPlayer:getPosition()
+  for _, spec in ipairs(getSpectators(pPos.z, false) or {}) do
     if spec:isPlayer() and not spec:isLocalPlayer() then
       local specPos = spec:getPosition()
-      if specPos.z == pPos.z and getDistanceBetween(pPos, specPos) <= range then
-        if spec:getShield() >= 3 or spec:getEmblem() == 1 or isFriend(spec:getName()) then
-          return true
-        end
+      if specPos.z == pPos.z
+        and getDistanceBetween(pPos, specPos) <= range
+        and (spec:getShield() or 0) ~= myShield then
+        return true
       end
     end
   end
@@ -402,10 +401,9 @@ macro(1000, function()
   local target = g_game.getAttackingCreature()
   if not target then return end
 
-  local maxDist = settings.targetDistance or 4
   local safeRange = settings.safeRange or 8
 
-  if not hasFriendNearby(safeRange) and getDistanceBetween(pos(), target:getPosition()) <= maxDist then
+  if not hasDifferentShieldNearby(safeRange) then
     local spell = settings.Spell
     if spell and spell:match("%S") then
       say(spell)
