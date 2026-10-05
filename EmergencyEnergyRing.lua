@@ -1,26 +1,114 @@
 -- ============================================================================
--- EMERGENCY ENERGY RING SWAPPER (COM SLOT CONFIGURÁVEL)
+-- EMERGENCY ENERGY RING SWAPPER (COM SETUP WINDOW)
 -- Tested on OTCv8 3.2 / vBot 4.8
 -- ============================================================================
 
--- Destrói painel anterior para não acumular processos na memória
-if emergencyRingPanel then
-  emergencyRingPanel:destroy()
-  emergencyRingPanel = nil
+storage.emergencyRing = storage.emergencyRing or {
+  enabled = false,
+  secRingId = 3048,
+  equipHp = 60,
+  unequipHp = 80
+}
+local config = storage.emergencyRing
+local eRingId = 3051
+
+if emergencyRingWindow then emergencyRingWindow:destroy() end
+
+g_ui.loadUIFromString([[
+EmergencyRingWindow < MainWindow
+  text: Emergency Ring Setup
+  size: 210 230
+  @onEscape: self:hide()
+  layout:
+    type: verticalBox
+    fit-children: true
+
+  Label
+    text-align: center
+    text: Anel Principal (Normal)
+    margin-top: 5
+
+  HorizontalSeparator
+    margin-top: 3
+
+  BotItem
+    id: ringSlot
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 5
+    width: 34
+    height: 34
+
+  HorizontalSeparator
+    margin-top: 8
+
+  Label
+    id: equipLabel
+    text-align: center
+    text: Equipa Energy se HP <= 60%
+    margin-top: 3
+
+  HorizontalScrollBar
+    id: equipScroll
+    minimum: 1
+    maximum: 100
+    step: 1
+    margin-top: 2
+
+  Label
+    id: unequipLabel
+    text-align: center
+    text: Tira Energy se HP >= 80%
+    margin-top: 5
+
+  HorizontalScrollBar
+    id: unequipScroll
+    minimum: 1
+    maximum: 100
+    step: 1
+    margin-top: 2
+
+  HorizontalSeparator
+    margin-top: 8
+
+  Button
+    id: closeButton
+    text: Close
+    font: cipsoftFont
+    margin-top: 5
+    margin-left: 145
+    width: 45
+    height: 21
+]])
+
+emergencyRingWindow = UI.createWindow('EmergencyRingWindow', g_ui.getRootWidget())
+emergencyRingWindow:hide()
+
+emergencyRingWindow.ringSlot:setItemId(config.secRingId)
+emergencyRingWindow.ringSlot.onItemChange = function(w)
+  config.secRingId = w:getItemId()
 end
 
-storage.emergencySecRingId = storage.emergencySecRingId or 3048 -- Anel padrão (ex: 3048 = Might Ring / 14557 = Prismatic)
-storage.emergencyRingEnabled = storage.emergencyRingEnabled or false
+emergencyRingWindow.equipScroll:setValue(config.equipHp)
+emergencyRingWindow.equipLabel:setText("Equipa Energy se HP <= " .. config.equipHp .. "%")
+emergencyRingWindow.equipScroll.onValueChange = function(w, v)
+  config.equipHp = v
+  emergencyRingWindow.equipLabel:setText("Equipa Energy se HP <= " .. v .. "%")
+end
 
-local eRingId = 3051 -- ID do Energy Ring
-local equipERingHp = 60 -- Equipa Energy Ring com 60% de HP ou menos
-local unequipERingHp = 80 -- Tira o Energy Ring e volta o anel normal com 80% de HP ou mais
+emergencyRingWindow.unequipScroll:setValue(config.unequipHp)
+emergencyRingWindow.unequipLabel:setText("Tira Energy se HP >= " .. config.unequipHp .. "%")
+emergencyRingWindow.unequipScroll.onValueChange = function(w, v)
+  config.unequipHp = v
+  emergencyRingWindow.unequipLabel:setText("Tira Energy se HP >= " .. v .. "%")
+end
 
--- Interface: Botão de alternar + Slot do Anel (Drag & Drop)
+emergencyRingWindow.closeButton.onClick = function()
+  emergencyRingWindow:hide()
+end
+
 local ui = setupUI([[
 Panel
-  id: emergencyRingPanelWidget
-  height: 34
+  height: 19
 
   BotSwitch
     id: title
@@ -28,65 +116,52 @@ Panel
     anchors.left: parent.left
     text-align: center
     width: 130
-    height: 33
-    font: verdana-11px-rounded
     !text: tr('Emergency Ring')
 
-  BotItem
-    id: ringSlot
-    anchors.top: parent.top
+  Button
+    id: setup
+    anchors.top: prev.top
     anchors.left: prev.right
-    margin-left: 6
-    width: 33
-    height: 33
+    anchors.right: parent.right
+    margin-left: 3
+    height: 17
+    text: Setup
 ]], parent)
 
-emergencyRingPanel = ui
-
--- Estado inicial do botão
-ui.title:setOn(storage.emergencyRingEnabled)
-
--- Evento Toggle On/Off
+ui.title:setOn(config.enabled)
 ui.title.onClick = function(widget)
-  local newState = not widget:isOn()
-  widget:setOn(newState)
-  storage.emergencyRingEnabled = newState
+  config.enabled = not config.enabled
+  widget:setOn(config.enabled)
 end
 
--- Slot do Anel Normal (Drag & Drop)
-ui.ringSlot:setItemId(storage.emergencySecRingId)
-ui.ringSlot.onItemChange = function(widget)
-  storage.emergencySecRingId = widget:getItemId()
+ui.setup.onClick = function()
+  emergencyRingWindow:show()
+  emergencyRingWindow:raise()
+  emergencyRingWindow:focus()
 end
 
--- ============================================================================
--- LÓGICA DE TROCA INTELIGENTE (ZERO LAG - 250ms)
--- ============================================================================
 macro(250, function()
-  if not storage.emergencyRingEnabled then return end
+  if not config.enabled then return end
 
   local hp = hppercent()
   local currentRing = getFinger()
   local currentRingId = currentRing and currentRing:getId() or 0
-  local normalRingId = storage.emergencySecRingId or 0
+  local normalRingId = config.secRingId or 0
 
-  -- 1. EMERGÊNCIA (HP <= 60%): Equipa o Energy Ring
-  if hp <= equipERingHp then
+  if hp <= config.equipHp then
     if currentRingId ~= eRingId then
       local eRingItem = findItem(eRingId)
       if eRingItem then
         moveToSlot(eRingItem, SlotFinger)
-        delay(400) -- Delay de segurança para não travar o cliente
+        delay(400)
       end
     end
-
-  -- 2. SEGURO (HP >= 80%): Tira o Energy Ring e volta o Anel configurado
-  elseif hp >= unequipERingHp then
+  elseif hp >= config.unequipHp then
     if normalRingId > 0 and currentRingId ~= normalRingId then
       local normalRingItem = findItem(normalRingId)
       if normalRingItem then
         moveToSlot(normalRingItem, SlotFinger)
-        delay(400) -- Delay de segurança
+        delay(400)
       end
     end
   end
