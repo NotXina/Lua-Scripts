@@ -164,9 +164,13 @@ end
 addIcon("StaminaIcon", {
   item = { id = 11588, count = 1 },
   text = "Stamina",
-  switchable = true,
 }, function(widget, isOn_)
   staminaIconWidget = widget
-  storage.staminaEnabled = isOn_ and 1 or 0
-  staminaUI.status:setOn(isOn_)
+  staminaSetEnabled(isOn_)
+end)
+
+schedule(100, function()
+  if staminaIconWidget then
+    staminaIconWidget.setOn(storage.staminaEnabled == 1)
+  end
 end)

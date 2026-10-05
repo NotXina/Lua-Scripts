@@ -131,6 +131,7 @@ pickUI.btnSetup.onClick = function()
   pickupSetupWindow:focus()
 end
 
+-- Macro Otimizado de Pick-Up (200ms com busca rápida O(1))
 macro(200, function()
   if storage.pickEnabled ~= 1 or freecap() < 150 or not storage.pickUp[1] then return end
 
@@ -190,9 +191,13 @@ end
 addIcon("PickupIcon", {
   item = { id = 3492, count = 1 },
   text = "Pick-Up",
-  switchable = true,
 }, function(widget, isOn_)
   pickIconWidget = widget
-  storage.pickEnabled = isOn_ and 1 or 0
-  pickUI.status:setOn(isOn_)
+  pickSetEnabled(isOn_)
+end)
+
+schedule(100, function()
+  if pickIconWidget then
+    pickIconWidget.setOn(storage.pickEnabled == 1)
+  end
 end)

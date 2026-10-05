@@ -129,9 +129,13 @@ end
 addIcon("SellIcon", {
   item = { id = sellWand, count = 1 },
   text = "Sell",
-  switchable = true,
 }, function(widget, isOn_)
   sellIconWidget = widget
-  storage.sellEnabled = isOn_ and 1 or 0
-  sellUI.status:setOn(isOn_)
+  sellSetEnabled(isOn_)
+end)
+
+schedule(100, function()
+  if sellIconWidget then
+    sellIconWidget.setOn(storage.sellEnabled == 1)
+  end
 end)

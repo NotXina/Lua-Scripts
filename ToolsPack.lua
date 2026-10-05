@@ -134,6 +134,7 @@ pickUI.btnSetup.onClick = function()
   pickupSetupWindow:focus()
 end
 
+-- Macro Otimizado de Pick-Up (200ms com busca rápida O(1))
 macro(200, function()
   if storage.pickEnabled ~= 1 or freecap() < 150 or not storage.pickUp[1] then return end
 
@@ -193,11 +194,15 @@ end
 addIcon("PickupIcon", {
   item = { id = 3492, count = 1 },
   text = "Pick-Up",
-  switchable = true,
 }, function(widget, isOn_)
   pickIconWidget = widget
-  storage.pickEnabled = isOn_ and 1 or 0
-  pickUI.status:setOn(isOn_)
+  pickSetEnabled(isOn_)
+end)
+
+schedule(100, function()
+  if pickIconWidget then
+    pickIconWidget.setOn(storage.pickEnabled == 1)
+  end
 end)
 
 -- ============================================================================
@@ -365,11 +370,15 @@ Panel
   addIcon("StaminaIcon", {
     item = { id = 11588, count = 1 },
     text = "Stamina",
-    switchable = true,
   }, function(widget, isOn_)
     staminaIconWidget = widget
-    storage.staminaEnabled = isOn_ and 1 or 0
-    staminaUI.status:setOn(isOn_)
+    staminaSetEnabled(isOn_)
+  end)
+
+  schedule(100, function()
+    if staminaIconWidget then
+      staminaIconWidget.setOn(storage.staminaEnabled == 1)
+    end
   end)
 end
 
@@ -504,11 +513,15 @@ end
 addIcon("SellIcon", {
   item = { id = sellWand, count = 1 },
   text = "Sell",
-  switchable = true,
 }, function(widget, isOn_)
   sellIconWidget = widget
-  storage.sellEnabled = isOn_ and 1 or 0
-  sellUI.status:setOn(isOn_)
+  sellSetEnabled(isOn_)
+end)
+
+schedule(100, function()
+  if sellIconWidget then
+    sellIconWidget.setOn(storage.sellEnabled == 1)
+  end
 end)
 
 -- ============================================================================
