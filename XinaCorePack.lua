@@ -2203,19 +2203,29 @@ xcPickupSetupWindow:hide()
 -- gerava alocacoes desnecessarias durante toda a execucao do bot.
 local pickMap = {}
 local destBpMap = {}
+local hasPickItems = false
+local hasDestBps = false
 local function rebuildPickMaps()
   pickMap = {}
-  for _, item in ipairs(storage.xcPickUp) do
+  hasPickItems = false
+  for _, item in ipairs(storage.xcPickUp or {}) do
     local id = type(item) == "table" and item.id or item
     id = tonumber(id)
-    if id and id > 0 then pickMap[id] = true end
+    if id and id > 0 then
+      pickMap[id] = true
+      hasPickItems = true
+    end
   end
 
   destBpMap = {}
-  for _, bp in ipairs(storage.xcContainerPickUp) do
+  hasDestBps = false
+  for _, bp in ipairs(storage.xcContainerPickUp or {}) do
     local id = type(bp) == "table" and bp.id or bp
     id = tonumber(id)
-    if id and id > 0 then destBpMap[id] = true end
+    if id and id > 0 then
+      destBpMap[id] = true
+      hasDestBps = true
+    end
   end
 end
 
@@ -2293,7 +2303,7 @@ end
 -- Macro Otimizado de Pick-Up (200ms com busca rápida O(1))
 macro(200, function()
   if storage.xcPickEnabled ~= 1 or freecap() < 150 then return end
-  if not next(pickMap) or not next(destBpMap) then return end
+  if not hasPickItems or not hasDestBps then return end
 
   -- Localiza uma mochila de destino uma vez por ciclo, em vez de repetir a
   -- busca pelos 16 containers para cada item encontrado no chao.
@@ -2859,12 +2869,17 @@ xcSellSetupWindow = UI.createWindow('XcSellSetupWindow', g_ui.getRootWidget())
 xcSellSetupWindow:hide()
 
 local sellMap = {}
+local hasSellItems = false
 local function rebuildSellMap()
   sellMap = {}
-  for _, item in ipairs(storage.xcItemsToSell) do
+  hasSellItems = false
+  for _, item in ipairs(storage.xcItemsToSell or {}) do
     local id = type(item) == "table" and item.id or item
     id = tonumber(id)
-    if id and id > 0 then sellMap[id] = true end
+    if id and id > 0 then
+      sellMap[id] = true
+      hasSellItems = true
+    end
   end
 end
 
@@ -2908,7 +2923,7 @@ sellUI.btnSetup.onClick = function()
 end
 
 macro(200, function()
-  if storage.xcSellEnabled ~= 1 or not next(sellMap) then return end
+  if storage.xcSellEnabled ~= 1 or not hasSellItems then return end
 
   for idx = 0, 15 do
     local container = g_game.getContainer(idx)
