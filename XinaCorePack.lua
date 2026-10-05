@@ -7,7 +7,8 @@
 --    1. COMBATE          -> Attack Players (menor HP), Auto SD no alvo,
 --                           Fast Paralyze Cure, Auto Destroy Field
 --    2. TRAP / MW        -> MW Self Step, Trapa em si (MW), Machete no WG
---    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita
+--    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita, Pot Friend,
+--                           Sio Friend
 --    4. EQUIPAMENTOS     -> Smart Energy Ring
 --    5. MOVIMENTACAO     -> Auto Chase, Auto Mount, Auto Invis, Bug Map Dash,
 --                           Anti-Push (moedas), Flores ao redor
@@ -18,10 +19,12 @@
 --  (gasta runa a toa / da lag). Continuam disponiveis como scripts avulsos.
 --
 --  Todos os modulos comecam DESLIGADOS. Ligue pelo painel do bot ou pelos
---  icones na tela. Ajuste tudo na tabela CONFIG logo abaixo.
+--  icones na tela. Ajuste os itens gerais na tabela CONFIG; Pot Friend e
+--  Sio Friend possuem janelas proprias de Setup.
 --
 --  AVISO: nao carregue este pack junto com os scripts avulsos equivalentes
---  (MWSelfStep.lua, AutoChase.lua, etc) para nao duplicar macros e hotkeys.
+--  (MWSelfStep.lua, AutoChase.lua, PotFriend.lua, AutoSioParty.lua, etc)
+--  para nao duplicar macros, callbacks e hotkeys.
 -- ============================================================================
 
 -- ============================================================================
@@ -285,6 +288,414 @@ addIcon("XC_Utamo", {item = {id = 3548, count = 1}, text = "Utamo"}, macro(500, 
     delay(500)
   end
 end))
+
+-- 3.3 Pot Friend e 3.4 Sio Friend -------------------------------------------
+-- Os dois controles ficam em linhas separadas para manter o painel limpo.
+storage.xcPotFriend = storage.xcPotFriend or {}
+storage.xcSioFriend = storage.xcSioFriend or {}
+
+local potSettings = storage.xcPotFriend
+local sioSettings = storage.xcSioFriend
+
+if potSettings.enabled == nil then potSettings.enabled = false end
+if potSettings.potion == nil then potSettings.potion = 268 end
+if potSettings.manaPercent == nil then potSettings.manaPercent = 50 end
+if potSettings.potDistance == nil then potSettings.potDistance = 3 end
+if potSettings.talkDelay == nil then potSettings.talkDelay = 2 end
+if potSettings.keyword == nil then potSettings.keyword = "p" end
+if potSettings.channelName == nil then potSettings.channelName = "party" end
+if potSettings.walkToPot == nil then potSettings.walkToPot = true end
+
+if sioSettings.enabled == nil then sioSettings.enabled = false end
+if sioSettings.friendHp == nil then sioSettings.friendHp = 70 end
+if sioSettings.minMyHp == nil then sioSettings.minMyHp = 50 end
+
+-- Remove janelas antigas ao recarregar o pack.
+if xcPotFriendWindow then
+  xcPotFriendWindow:destroy()
+  xcPotFriendWindow = nil
+end
+if xcSioFriendWindow then
+  xcSioFriendWindow:destroy()
+  xcSioFriendWindow = nil
+end
+
+g_ui.loadUIFromString([[
+XcPotScrollBar < Panel
+  height: 28
+  margin-top: 3
+
+  UIWidget
+    id: text
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    text-align: center
+
+  HorizontalScrollBar
+    id: scroll
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+    minimum: 0
+    maximum: 100
+    step: 1
+
+XcPotTextEdit < Panel
+  height: 40
+  margin-top: 7
+
+  UIWidget
+    id: text
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    text-align: center
+
+  TextEdit
+    id: textEdit
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 5
+    text-align: center
+
+XcPotItem < Panel
+  height: 34
+  margin-top: 7
+  margin-left: 20
+  margin-right: 20
+
+  UIWidget
+    id: text
+    anchors.left: parent.left
+    anchors.verticalCenter: next.verticalCenter
+
+  BotItem
+    id: item
+    anchors.top: parent.top
+    anchors.right: parent.right
+
+XcPotCheckBox < BotSwitch
+  height: 20
+  margin-top: 7
+
+XcPotFriendWindow < MainWindow
+  !text: tr('Pot Friend Setup')
+  size: 420 330
+  padding: 15
+  @onEscape: self:hide()
+
+  ScrollablePanel
+    id: content
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: separator.top
+    margin-bottom: 8
+
+    Panel
+      id: left
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.horizontalCenter
+      margin-right: 8
+      layout:
+        type: verticalBox
+        fit-children: true
+
+    Panel
+      id: right
+      anchors.top: parent.top
+      anchors.left: parent.horizontalCenter
+      anchors.right: parent.right
+      margin-left: 8
+      layout:
+        type: verticalBox
+        fit-children: true
+
+    VerticalSeparator
+      anchors.top: parent.top
+      anchors.bottom: parent.bottom
+      anchors.left: parent.horizontalCenter
+
+  HorizontalSeparator
+    id: separator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-bottom: 8
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    font: cipsoftFont
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 50 21
+
+XcSioFriendWindow < MainWindow
+  !text: tr('Sio Friend Setup')
+  size: 230 180
+  padding: 15
+  @onEscape: self:hide()
+  layout:
+    type: verticalBox
+    fit-children: true
+
+  Label
+    id: friendHpLabel
+    text-align: center
+    text: Curar amigos abaixo de: 70% HP
+    margin-top: 5
+
+  HorizontalScrollBar
+    id: friendHpScroll
+    minimum: 1
+    maximum: 100
+    step: 1
+    margin-top: 5
+
+  HorizontalSeparator
+    margin-top: 8
+
+  Label
+    id: myHpLabel
+    text-align: center
+    text: Meu HP minimo para Sio: 50%
+    margin-top: 3
+
+  HorizontalScrollBar
+    id: myHpScroll
+    minimum: 1
+    maximum: 100
+    step: 1
+    margin-top: 5
+
+  HorizontalSeparator
+    margin-top: 8
+
+  Button
+    id: closeButton
+    !text: tr('Close')
+    font: cipsoftFont
+    margin-top: 5
+    margin-left: 155
+    width: 45
+    height: 21
+]])
+
+xcPotFriendWindow = UI.createWindow('XcPotFriendWindow', g_ui.getRootWidget())
+xcPotFriendWindow:hide()
+xcPotFriendWindow.closeButton.onClick = function()
+  xcPotFriendWindow:hide()
+end
+
+local potLeftPanel = xcPotFriendWindow.content.left
+local potRightPanel = xcPotFriendWindow.content.right
+
+local function addPotCheckBox(id, title, defaultValue, destination)
+  local widget = UI.createWidget('XcPotCheckBox', destination)
+  widget:setText(title)
+  if potSettings[id] == nil then potSettings[id] = defaultValue end
+  widget:setOn(potSettings[id])
+  widget.onClick = function()
+    widget:setOn(not widget:isOn())
+    potSettings[id] = widget:isOn()
+  end
+end
+
+local function addPotItem(id, title, defaultItem, destination)
+  local widget = UI.createWidget('XcPotItem', destination)
+  if potSettings[id] == nil then potSettings[id] = defaultItem end
+  widget.text:setText(title)
+  widget.item:setItemId(potSettings[id])
+  widget.item.onItemChange = function(itemWidget)
+    potSettings[id] = itemWidget:getItemId()
+  end
+end
+
+local function addPotTextEdit(id, title, defaultValue, destination)
+  local widget = UI.createWidget('XcPotTextEdit', destination)
+  if potSettings[id] == nil then potSettings[id] = defaultValue end
+  widget.text:setText(title)
+  widget.textEdit:setText(potSettings[id])
+  widget.textEdit.onTextChange = function(_, text)
+    potSettings[id] = text
+  end
+end
+
+local function addPotScrollBar(id, title, minimum, maximum, defaultValue, destination)
+  local widget = UI.createWidget('XcPotScrollBar', destination)
+  if potSettings[id] == nil then potSettings[id] = defaultValue end
+  widget.scroll:setRange(minimum, maximum)
+  widget.scroll:setValue(potSettings[id])
+  widget.text:setText(title:gsub("#v", widget.scroll:getValue()))
+  widget.scroll.onValueChange = function(_, value)
+    potSettings[id] = value
+    widget.text:setText(title:gsub("#v", value))
+  end
+end
+
+addPotItem("potion", "Potion", 268, potLeftPanel)
+addPotScrollBar("manaPercent", "Pedir pot com #v% MP", 0, 100, 50, potLeftPanel)
+addPotScrollBar("potDistance", "Distancia max: #v SQMs", 0, 8, 3, potLeftPanel)
+addPotScrollBar("talkDelay", "Delay de fala: #vs", 0, 10, 2, potLeftPanel)
+addPotTextEdit("keyword", "Palavra-chave", "p", potLeftPanel)
+addPotTextEdit("channelName", "Chat (party/guild)", "party", potRightPanel)
+addPotCheckBox("walkToPot", "Andar ate amigos para potar", true, potRightPanel)
+
+xcSioFriendWindow = UI.createWindow('XcSioFriendWindow', g_ui.getRootWidget())
+xcSioFriendWindow:hide()
+xcSioFriendWindow.closeButton.onClick = function()
+  xcSioFriendWindow:hide()
+end
+
+xcSioFriendWindow.friendHpScroll:setValue(sioSettings.friendHp)
+xcSioFriendWindow.friendHpLabel:setText("Curar amigos abaixo de: " .. sioSettings.friendHp .. "% HP")
+xcSioFriendWindow.friendHpScroll.onValueChange = function(_, value)
+  sioSettings.friendHp = value
+  xcSioFriendWindow.friendHpLabel:setText("Curar amigos abaixo de: " .. value .. "% HP")
+end
+
+xcSioFriendWindow.myHpScroll:setValue(sioSettings.minMyHp)
+xcSioFriendWindow.myHpLabel:setText("Meu HP minimo para Sio: " .. sioSettings.minMyHp .. "%")
+xcSioFriendWindow.myHpScroll.onValueChange = function(_, value)
+  sioSettings.minMyHp = value
+  xcSioFriendWindow.myHpLabel:setText("Meu HP minimo para Sio: " .. value .. "%")
+end
+
+-- Uma linha para cada script evita espremer os nomes e os botoes de setup.
+local friendSupportUi = setupUI([[
+Panel
+  height: 42
+
+  BotSwitch
+    id: potTitle
+    anchors.top: parent.top
+    anchors.left: parent.left
+    text-align: center
+    width: 130
+    height: 19
+    !text: tr('Pot Friend')
+
+  Button
+    id: potSetup
+    anchors.top: potTitle.top
+    anchors.left: potTitle.right
+    anchors.right: parent.right
+    margin-left: 3
+    height: 17
+    !text: tr('Setup')
+
+  BotSwitch
+    id: sioTitle
+    anchors.top: potTitle.bottom
+    anchors.left: parent.left
+    margin-top: 3
+    text-align: center
+    width: 130
+    height: 19
+    !text: tr('Sio Friend')
+
+  Button
+    id: sioSetup
+    anchors.top: sioTitle.top
+    anchors.left: sioTitle.right
+    anchors.right: parent.right
+    margin-left: 3
+    height: 17
+    !text: tr('Setup')
+]], parent)
+
+friendSupportUi.potTitle:setOn(potSettings.enabled)
+friendSupportUi.potTitle.onClick = function(widget)
+  potSettings.enabled = not potSettings.enabled
+  widget:setOn(potSettings.enabled)
+end
+friendSupportUi.potSetup.onClick = function()
+  xcPotFriendWindow:show()
+  xcPotFriendWindow:raise()
+  xcPotFriendWindow:focus()
+end
+
+friendSupportUi.sioTitle:setOn(sioSettings.enabled)
+friendSupportUi.sioTitle.onClick = function(widget)
+  sioSettings.enabled = not sioSettings.enabled
+  widget:setOn(sioSettings.enabled)
+end
+friendSupportUi.sioSetup.onClick = function()
+  xcSioFriendWindow:show()
+  xcSioFriendWindow:raise()
+  xcSioFriendWindow:focus()
+end
+
+-- Pede potion no canal configurado quando a mana fica abaixo do limite.
+macro(1000, function()
+  if not potSettings.enabled then return end
+  if manapercent() > potSettings.manaPercent then return end
+
+  local channel = getChannelId(potSettings.channelName)
+  if channel then
+    sayChannel(channel, potSettings.keyword)
+    delay(potSettings.talkDelay * 1000)
+  end
+end)
+
+-- Envia duas potions para um amigo de party/guild que disser a palavra-chave.
+onTalk(function(authorName, level, mode, text, channelId, talkPosition)
+  if not potSettings.enabled then return end
+  if authorName:lower() == name():lower() then return end
+  if text:lower() ~= potSettings.keyword:lower() then return end
+
+  local friend = getCreatureByName(authorName)
+  if not friend then return end
+  if friend:getEmblem() ~= 1 and friend:getShield() < 3 and not isFriend(authorName) then return end
+
+  local friendPosition = friend:getPosition()
+  local myPosition = pos()
+  if not friendPosition or friendPosition.z ~= myPosition.z then return end
+  if getDistanceBetween(myPosition, friendPosition) > potSettings.potDistance then return end
+
+  if potSettings.walkToPot and getDistanceBetween(myPosition, friendPosition) > 1 then
+    autoWalk(friendPosition, 10, {precision = 1, ignoreCreatures = true})
+  end
+
+  useWith(potSettings.potion, friend)
+
+  schedule(350, function()
+    local currentFriend = getCreatureByName(authorName)
+    if not currentFriend then return end
+    local currentPosition = currentFriend:getPosition()
+    if currentPosition and currentPosition.z == posz()
+      and getDistanceBetween(pos(), currentPosition) <= potSettings.potDistance then
+      useWith(potSettings.potion, currentFriend)
+    end
+  end)
+end)
+
+-- Cura o amigo de party/guild com o menor HP dentro do limite configurado.
+macro(200, function()
+  if not sioSettings.enabled then return end
+  if hppercent() < sioSettings.minMyHp then return end
+
+  local lowestFriend, lowestHp = nil, 101
+  for _, spec in ipairs(getSpectators(posz(), false) or {}) do
+    if spec:isPlayer() and not spec:isLocalPlayer()
+      and (spec:getShield() >= 3 or spec:getEmblem() == 1 or isFriend(spec:getName())) then
+      local friendHp = spec:getHealthPercent()
+      if friendHp > 0 and friendHp <= sioSettings.friendHp and friendHp < lowestHp then
+        lowestFriend, lowestHp = spec, friendHp
+      end
+    end
+  end
+
+  if lowestFriend then
+    say('exura sio "' .. lowestFriend:getName())
+    delay(400)
+  end
+end)
 
 -- ============================================================================
 -- 4. EQUIPAMENTOS
