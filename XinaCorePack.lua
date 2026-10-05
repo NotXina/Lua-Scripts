@@ -2583,13 +2583,21 @@ for i = 1, 15 do
   itemWidget:setItemId(settings.items[slotIndex])
 end
 
-local generation = 0
 local nextCycleAt = nil
 local cycleRunning = false
+local cycleItems = {}
+local cycleItemIndex = 1
+local nextItemAt = nil
+
+local function clearActiveCycle()
+  cycleRunning = false
+  cycleItems = {}
+  cycleItemIndex = 1
+  nextItemAt = nil
+end
 
 local function resetCycle(useSoon)
-  generation = generation + 1 -- cancela o ciclo anterior
-  cycleRunning = false
+  clearActiveCycle()
   if not settings.enabled then
     nextCycleAt = nil
     return
@@ -2602,10 +2610,18 @@ local function resetCycle(useSoon)
   end
 end
 
-local function useConfiguredItems()
-  generation = generation + 1
-  local currentGeneration = generation
-  local cycleItems = {}
+local function finishCycle()
+  clearActiveCycle()
+  if settings.enabled then
+    -- O intervalo seguinte comeca depois que o ultimo item foi usado.
+    nextCycleAt = millis() + (settings.timeMinutes * 60000)
+  else
+    nextCycleAt = nil
+  end
+end
+
+local function startCycle()
+  cycleItems = {}
 
   -- Percorre por indice para manter a ordem e nao parar em slots vazios.
   for i = 1, 15 do
@@ -2615,30 +2631,38 @@ local function useConfiguredItems()
     end
   end
 
-  cycleRunning = true
-  nextCycleAt = nil
-
-  local useNextItem
-  useNextItem = function(index)
-    if not settings.enabled or generation ~= currentGeneration then return end
-
-    if index > #cycleItems then
-      cycleRunning = false
-      nextCycleAt = millis() + (settings.timeMinutes * 60000)
-      return
-    end
-
-    -- Se entrar em PZ durante a sequencia, pausa e continua ao sair.
-    if isInPz() then
-      schedule(500, function() useNextItem(index) end)
-      return
-    end
-
-    use(cycleItems[index])
-    schedule(500, function() useNextItem(index + 1) end)
+  cycleItemIndex = 1
+  if #cycleItems == 0 then
+    finishCycle()
+    return
   end
 
-  useNextItem(1)
+  cycleRunning = true
+  nextCycleAt = nil
+  nextItemAt = millis()
+end
+
+local function processActiveCycle()
+  if not cycleRunning or isInPz() then return end
+
+  local timestamp = millis()
+  if timestamp < nextItemAt then return end
+
+  local itemId = cycleItems[cycleItemIndex]
+  if not itemId then
+    finishCycle()
+    return
+  end
+
+  -- Esta chamada so e alcancada depois da verificacao de PZ acima.
+  use(itemId)
+  cycleItemIndex = cycleItemIndex + 1
+
+  if cycleItemIndex > #cycleItems then
+    finishCycle()
+  else
+    nextItemAt = timestamp + 500
+  end
 end
 
 xcAutoUseItemsWindow.intervalScroll.onValueChange = function(_, value)
@@ -2671,10 +2695,18 @@ end
 resetCycle(settings.enabled)
 
 macro(500, function()
-  if not settings.enabled or cycleRunning or not nextCycleAt then return end
-  if isInPz() then return end
+  if not settings.enabled then return end
+
+  if cycleRunning then
+    -- Em PZ, processActiveCycle apenas espera sem criar schedules recursivos.
+    processActiveCycle()
+    return
+  end
+
+  if isInPz() or not nextCycleAt then return end
   if millis() >= nextCycleAt then
-    useConfiguredItems()
+    startCycle()
+    processActiveCycle()
   end
 end)
 end
