@@ -4,19 +4,18 @@
 --  Pack unico e organizado com os modulos avulsos deste repositorio.
 --  Tudo fica dentro da aba "Xina Core", dividido por secoes:
 --
---    1. COMBATE          -> Attack Players (menor HP), Fast Paralyze Cure,
---                           Auto Destroy Field
+--    1. COMBATE          -> Attack Players (menor HP), Auto SD no alvo,
+--                           Fast Paralyze Cure, Auto Destroy Field
 --    2. TRAP / MW        -> MW Self Step, Trapa em si (MW), Machete no WG
 --    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita
 --    4. EQUIPAMENTOS     -> Smart Energy Ring
---    5. MOVIMENTACAO     -> Auto Chase, Auto Mount, Auto Invis, Bug Map Dash
+--    5. MOVIMENTACAO     -> Auto Chase, Auto Mount, Auto Invis, Bug Map Dash,
+--                           Anti-Push (moedas), Flores ao redor
 --    6. HUD & INTERFACE  -> Target HUD, Coordenadas no minimapa,
 --                           Icones CaveBot / TargetBot
 --
---  Versao enxuta: so modulos que valem a pena em jogo. Ficaram de fora
---  (gastam runa/dao lag/chamam atencao): Auto SD no alvo, Trap WG diagonais,
---  Timer visual de MW, Anti-Push com moedas e Flores ao redor - continuam
---  disponiveis nos scripts avulsos do repositorio.
+--  Versao enxuta: ficaram de fora Trap WG diagonais e o Timer visual de MW
+--  (gasta runa a toa / da lag). Continuam disponiveis como scripts avulsos.
 --
 --  Todos os modulos comecam DESLIGADOS. Ligue pelo painel do bot ou pelos
 --  icones na tela. Ajuste tudo na tabela CONFIG logo abaixo.
@@ -31,12 +30,16 @@
 local CONFIG = {
   -- Runas e itens
   mwId            = 3180,   -- Magic Wall      (2293 em 7.4/8.0)
+  sdId            = 3155,   -- Sudden Death    (2268 em versoes antigas)
   uhId            = 3160,   -- Ultimate Healing Rune
   destroyFieldId  = 3148,   -- Destroy Field
   macheteId       = 3308,   -- Machete / Tramontina
   energyRingId    = 3051,   -- Energy Ring
+  trashId         = 3031,   -- Anti-Push: 3031 = Gold | 3035 = Platinum
+  flowerIds       = {2981, 2983, 2984, 2985},
 
   -- Combate
+  sdMaxDistance   = 7,      -- Distancia maxima para soltar SD no alvo
   cureSpell       = "exura",-- Magia usada para curar paralyze
 
   -- Cura
@@ -141,7 +144,18 @@ macro(100, "Attack Players (menor HP)", CONFIG.hkAttackPlayers, function()
   end
 end)
 
--- 1.2 Fast Paralyze Cure (zero delay) ---------------------------------------
+-- 1.2 Auto SD no alvo (runas infinitas no server) ---------------------------
+macro(100, "Auto SD no alvo", function()
+  local target = g_game.getAttackingCreature()
+  if not target then return end
+  local tPos = target:getPosition()
+  if tPos.z == posz() and getDistanceBetween(pos(), tPos) <= CONFIG.sdMaxDistance then
+    useWith(CONFIG.sdId, target)
+    delay(200)
+  end
+end)
+
+-- 1.3 Fast Paralyze Cure (zero delay) ---------------------------------------
 macro(20, "Fast Paralyze Cure", function()
   if isParalyzed() then
     say(CONFIG.cureSpell)
@@ -149,7 +163,7 @@ macro(20, "Fast Paralyze Cure", function()
   end
 end)
 
--- 1.3 Auto Destroy Field no pe ----------------------------------------------
+-- 1.4 Auto Destroy Field no pe ----------------------------------------------
 local DANGEROUS_FIELDS = {
   [2118] = true, [2119] = true, [2120] = true, -- Fire
   [2123] = true, [2124] = true, [2125] = true, -- Poison
@@ -330,6 +344,49 @@ bugMap.setOff()
 addIcon("XC_Dash", {item = 3368, text = "DASH", hotkey = CONFIG.hkDash}, function(icon, isOn)
   modules.game_console.consoleTextEdit:setVisible(not isOn)
   bugMap.setOn(isOn)
+end)
+
+-- 5.5 Anti-Push com moedas (impede que te empurrem) -------------------------
+macro(100, "Anti-Push (moedas)", function()
+  local pPos = pos()
+  local tile = g_map.getTile(pPos)
+  if not tile then return end
+
+  local top = tile:getTopThing()
+  if not top or top:getId() ~= CONFIG.trashId then
+    local item = findItem(CONFIG.trashId)
+    if item then g_game.move(item, pPos, 1) end
+  end
+end)
+
+-- 5.6 Flores nos 8 SQMs ao redor (anti-trap / anti-push) ---------------------
+local function hasFlower(tile)
+  if not tile then return false end
+  local item = tile:getTopThing()
+  return item and table.find(CONFIG.flowerIds, item:getId())
+end
+
+local function findFlower()
+  for _, id in ipairs(CONFIG.flowerIds) do
+    local item = findItem(id)
+    if item then return item end
+  end
+end
+
+macro(250, "Flores ao redor", function()
+  local pPos = pos()
+  for _, off in ipairs(AROUND) do
+    local targetPos = {x = pPos.x + off[1], y = pPos.y + off[2], z = pPos.z}
+    local tile = g_map.getTile(targetPos)
+    if tile and not hasFlower(tile) then
+      local flower = findFlower()
+      if flower then
+        g_game.move(flower, targetPos, 1)
+        delay(150)
+        return
+      end
+    end
+  end
 end)
 
 -- ============================================================================
