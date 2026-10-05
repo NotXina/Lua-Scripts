@@ -18,17 +18,25 @@
 -- ============================================================================
 xinaSharedIcons = xinaSharedIcons or {}
 
+-- O g_clock não é exposto por todas as versões do OTCv8/vBot. Usa o relógio
+-- do vBot quando disponível e mantém fallbacks compatíveis para o carregamento.
+local function millis()
+  if type(now) == "number" then return now end
+  if g_clock and type(g_clock.millis) == "function" then return g_clock.millis() end
+  return os.time() * 1000
+end
+
 -- "Reivindica" um módulo compartilhado. Retorna true só para quem chamar
 -- primeiro; expira sozinha depois de alguns segundos para não "perder" o
 -- ícone caso os scripts sejam recarregados em momentos diferentes (ex.:
 -- editar e salvar só um dos dois arquivos no bot).
 local function claimSharedIcon(key)
-  local now = g_clock.millis()
+  local timestamp = millis()
   local claimedAt = xinaSharedIcons[key]
-  if claimedAt and (now - claimedAt) < 3000 then
+  if claimedAt and (timestamp - claimedAt) < 3000 then
     return false
   end
-  xinaSharedIcons[key] = now
+  xinaSharedIcons[key] = timestamp
   return true
 end
 
@@ -179,7 +187,7 @@ if claimSharedIcon("utamo") then
   local nextUtamo = 0
 
   addIcon("renewUtamo", {item = {id = 3548, count = 1}, text = "Utamo"}, macro(500, function()
-    local t = now or g_clock.millis()
+    local t = millis()
     if not hasManaShield() or t > nextUtamo then
       say("utamo vita")
       nextUtamo = t + ((utamoDuration - renewEarly) * 1000)
