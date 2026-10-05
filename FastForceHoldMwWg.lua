@@ -100,24 +100,40 @@ ForceHoldWindow < MainWindow
 forceHoldWindow = UI.createWindow('ForceHoldWindow', g_ui.getRootWidget())
 forceHoldWindow:hide()
 
-forceHoldWindow.mwKeyText:setText(config.mwHotkey or "f3")
-forceHoldWindow.mwKeyText.onTextChange = function(w, text)
+local function fhfhChild(id)
+  local w = forceHoldWindow:recursiveGetChildById(id)
+  if not w then
+    error("[ForceHold] widget nao encontrado na UI: " .. tostring(id))
+  end
+  return w
+end
+
+local fh_mwKeyText = fhfhChild('mwKeyText')
+local fh_wgKeyText = fhfhChild('wgKeyText')
+local fh_precastScroll = fhfhChild('precastScroll')
+local fh_precastLabel = fhfhChild('precastLabel')
+local fh_cleanBtn = fhfhChild('cleanBtn')
+local fh_closeButton = fhfhChild('closeButton')
+
+
+fh_mwKeyText:setText(config.mwHotkey or "f3")
+fh_mwKeyText.onTextChange = function(w, text)
   config.mwHotkey = text
 end
 
-forceHoldWindow.wgKeyText:setText(config.wgHotkey or "f4")
-forceHoldWindow.wgKeyText.onTextChange = function(w, text)
+fh_wgKeyText:setText(config.wgHotkey or "f4")
+fh_wgKeyText.onTextChange = function(w, text)
   config.wgHotkey = text
 end
 
-forceHoldWindow.precastScroll:setValue(config.preCastTime or 180)
-forceHoldWindow.precastLabel:setText("Pre-cast: " .. (config.preCastTime or 180) .. "ms")
-forceHoldWindow.precastScroll.onValueChange = function(w, v)
+fh_precastScroll:setValue(config.preCastTime or 180)
+fh_precastLabel:setText("Pre-cast: " .. (config.preCastTime or 180) .. "ms")
+fh_precastScroll.onValueChange = function(w, v)
   config.preCastTime = v
-  forceHoldWindow.precastLabel:setText("Pre-cast: " .. v .. "ms")
+  fh_precastLabel:setText("Pre-cast: " .. v .. "ms")
 end
 
-forceHoldWindow.cleanBtn.onClick = function()
+fh_cleanBtn.onClick = function()
   for _, p in ipairs(storage.mwPoses) do
     local tile = g_map.getTile(p)
     if tile then tile:setText("") end
@@ -132,7 +148,7 @@ forceHoldWindow.cleanBtn.onClick = function()
   lastCast = {}
 end
 
-forceHoldWindow.closeButton.onClick = function()
+fh_closeButton.onClick = function()
   forceHoldWindow:hide()
 end
 

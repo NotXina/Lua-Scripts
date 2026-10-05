@@ -569,24 +569,40 @@ XcForceHoldWindow < MainWindow
 xcForceHoldWindow = UI.createWindow('XcForceHoldWindow', g_ui.getRootWidget())
 xcForceHoldWindow:hide()
 
-xcForceHoldWindow.mwKeyText:setText(config.mwHotkey or "f3")
-xcForceHoldWindow.mwKeyText.onTextChange = function(w, text)
+local function xcfhChild(id)
+  local w = xcForceHoldWindow:recursiveGetChildById(id)
+  if not w then
+    error("[ForceHold] widget nao encontrado na UI: " .. tostring(id))
+  end
+  return w
+end
+
+local xc_mwKeyText = xcfhChild('mwKeyText')
+local xc_wgKeyText = xcfhChild('wgKeyText')
+local xc_precastScroll = xcfhChild('precastScroll')
+local xc_precastLabel = xcfhChild('precastLabel')
+local xc_cleanBtn = xcfhChild('cleanBtn')
+local xc_closeButton = xcfhChild('closeButton')
+
+
+xc_mwKeyText:setText(config.mwHotkey or "f3")
+xc_mwKeyText.onTextChange = function(w, text)
   config.mwHotkey = text
 end
 
-xcForceHoldWindow.wgKeyText:setText(config.wgHotkey or "f4")
-xcForceHoldWindow.wgKeyText.onTextChange = function(w, text)
+xc_wgKeyText:setText(config.wgHotkey or "f4")
+xc_wgKeyText.onTextChange = function(w, text)
   config.wgHotkey = text
 end
 
-xcForceHoldWindow.precastScroll:setValue(config.preCastTime or 180)
-xcForceHoldWindow.precastLabel:setText("Pre-cast: " .. (config.preCastTime or 180) .. "ms")
-xcForceHoldWindow.precastScroll.onValueChange = function(w, v)
+xc_precastScroll:setValue(config.preCastTime or 180)
+xc_precastLabel:setText("Pre-cast: " .. (config.preCastTime or 180) .. "ms")
+xc_precastScroll.onValueChange = function(w, v)
   config.preCastTime = v
-  xcForceHoldWindow.precastLabel:setText("Pre-cast: " .. v .. "ms")
+  xc_precastLabel:setText("Pre-cast: " .. v .. "ms")
 end
 
-xcForceHoldWindow.cleanBtn.onClick = function()
+xc_cleanBtn.onClick = function()
   for _, p in ipairs(storage.xcMwPoses) do
     local tile = g_map.getTile(p)
     if tile then tile:setText("") end
@@ -601,7 +617,7 @@ xcForceHoldWindow.cleanBtn.onClick = function()
   lastCast = {}
 end
 
-xcForceHoldWindow.closeButton.onClick = function()
+xc_closeButton.onClick = function()
   xcForceHoldWindow:hide()
 end
 
