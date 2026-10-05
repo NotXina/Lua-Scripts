@@ -40,8 +40,8 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack enxuto e organizado para uso em jogo, com aba própria (`Xina Core`) em 6 seções: Attack Players (menor HP), Auto SD no alvo, Fast Paralyze Cure, Auto Destroy Field, MW Self Step, Trapa em si com MW, Machete no WG, UH No Time, Renew Utamo Vita, Smart Energy Ring, Auto Chase, Auto Mount, Auto Invis, Bug Map Dash, Anti-Push com moedas, Flores ao redor, Target HUD, coordenadas no minimapa e ícones CaveBot/TargetBot. IDs, limiares e hotkeys numa única tabela `CONFIG` no topo; tudo inicia desligado. |
-| **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
+| **XinaCorePack.lua** | ⭐ Pack enxuto e organizado para uso em jogo, com aba própria (`Xina Core`) em 6 seções: Attack Players (menor HP), Auto SD no alvo, Fast Paralyze Cure, Auto Destroy Field com Disintegrate nas flores ao redor, MW Self Step, Trapa em si com MW, Machete no WG, UH No Time, Renew Utamo Vita, Smart Energy Ring, Auto Chase, Auto Mount, Auto Invis, Bug Map Dash, Anti-Push com moedas, Flores ao redor, Target HUD, coordenadas no minimapa e ícones CaveBot/TargetBot. IDs, limiares e hotkeys numa única tabela `CONFIG` no topo; tudo inicia desligado. |
+| **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (só solta a área quando não acerta amigo), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
 | **IconesDashPack.lua** | Pack de ícones e deslocamento: Machete/Tramontina no Wild Growth, ícones ON/OFF de CaveBot e TargetBot, Dash (bug map / map click), invisibilidade, auto mount, Utamo Vita com renovação inteligente, Auto Chase e ícones de SD Max, Paralyze Max e Avalanche Max. |
@@ -58,7 +58,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | **ComboAttackMissile.lua** | Combo por **detecção de míssil**: identifica o disparo (SD/runa) de até 3 líderes configuráveis e ataca o mesmo alvo no exato momento do tiro. |
 | **AutoSdTarget.lua** | Lança Sudden Death automaticamente no alvo atual, respeitando o mesmo andar e distância máxima de 7 SQMs. |
 | **SafeSdMasFrigo.lua** | Alterna entre runa e magia de área (`exevo gran mas frigo`): só usa a área quando nenhum amigo está no raio de impacto. Com janela de setup. |
-| **AutoDestroyField.lua** | Usa Destroy Field automaticamente para remover Fire, Poison ou Energy Field jogados embaixo do seu personagem. |
+| **AutoDestroyField.lua** | Usa Destroy Field para remover Fire, Poison ou Energy Field embaixo do personagem e Disintegrate para remover flores nos 8 tiles ao redor. |
 | **FastParalyzeCure.lua** | Cura o paralyze com magia no exato milissegundo em que o status é aplicado (zero-delay). |
 
 ---
