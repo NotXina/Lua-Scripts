@@ -136,6 +136,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | **StatusExpWidget.lua** | Widget compacto e arrastável com status e experiência, salvando a posição na tela entre sessões. |
 | **MinimapCoords.lua** | Exibe as coordenadas X, Y e Z no canto inferior do minimapa. |
 | **CaveBotTargetBotIcons.lua** | Ícones arrastáveis para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). |
+| **TelaLimpa.lua** | Botão para ocultar textos laranjas, efeitos de magias, danos animados, mensagens do sistema e mísseis. Mensagens que contenham `says:` são preservadas. |
 
 ---
 
