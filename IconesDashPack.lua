@@ -26,19 +26,45 @@ local function millis()
   return os.time() * 1000
 end
 
--- "Reivindica" um módulo compartilhado. Retorna true só para quem chamar
--- primeiro; expira sozinha depois de alguns segundos para não "perder" o
--- ícone caso os scripts sejam recarregados em momentos diferentes (ex.:
--- editar e salvar só um dos dois arquivos no bot).
+-- Cada pack atualiza um heartbeat das reivindicacoes que possui. Assim a trava
+-- nao expira enquanto o dono estiver carregado, mas uma reivindicacao abandonada
+-- pode ser assumida depois de alguns segundos. A tabela de donos separada mantem
+-- compatibilidade com versoes antigas, que armazenavam apenas o timestamp.
+xinaSharedIconOwners = xinaSharedIconOwners or {}
+local SHARED_ICON_OWNER = "iconesDash"
+local SHARED_ICON_TTL = 3000
+
+for key, claimedOwner in pairs(xinaSharedIconOwners) do
+  if claimedOwner == SHARED_ICON_OWNER then
+    xinaSharedIcons[key] = nil
+    xinaSharedIconOwners[key] = nil
+  end
+end
+
 local function claimSharedIcon(key)
   local timestamp = millis()
   local claimedAt = xinaSharedIcons[key]
-  if claimedAt and (timestamp - claimedAt) < 3000 then
+  local activeClaim = type(claimedAt) ~= "number"
+    or (timestamp - claimedAt) < SHARED_ICON_TTL
+
+  if claimedAt ~= nil and activeClaim then
     return false
   end
+
   xinaSharedIcons[key] = timestamp
+  xinaSharedIconOwners[key] = SHARED_ICON_OWNER
   return true
 end
+
+-- Impede que o segundo pack crie copias caso seja carregado muito tempo depois.
+macro(1000, function()
+  local timestamp = millis()
+  for key, claimedOwner in pairs(xinaSharedIconOwners) do
+    if claimedOwner == SHARED_ICON_OWNER then
+      xinaSharedIcons[key] = timestamp
+    end
+  end
+end)
 
 -- ============================================================================
 -- 1. FUNÇÕES AUXILIARES

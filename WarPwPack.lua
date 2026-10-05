@@ -11,28 +11,29 @@ setDefaultTab("WarPw")
 -- ============================================================================
 storage.safeSdMasFrigo = storage.safeSdMasFrigo or {}
 local safeSettings = storage.safeSdMasFrigo
+if safeSettings.safeRange == nil then safeSettings.safeRange = 8 end
 
 addLabel("", "Magia no modo seguro (UE):"):setColor("orange")
 addTextEdit("TxtEditSpell", safeSettings.Spell or "exevo gran mas frigo", function(widget, text)
   safeSettings.Spell = text
 end)
 
--- Verifica se tem amigo (party, guild ou lista de amigos) perto o bastante
--- para ser atingido pela área. Não usa isSafe()/isFriend() puros do vBot
--- porque isFriend() NÃO reconhece membro de guild (sem emblema) como amigo,
--- e só reconhece membro de party se a opção "Group Members" da Player List
--- do vBot estiver ligada. Checar o shield (party) e o emblem (guild/ally)
--- diretamente evita soltar UE em cima de guild/party, igual aos outros
--- modulos deste pack (Attack Players, UH No Time, etc).
-local function hasFriendNearby(range)
-  local pPos = pos()
-  for _, spec in ipairs(getSpectators(posz(), false) or {}) do
+-- A única trava da UE é encontrar, no mesmo andar e dentro do raio,
+-- outro jogador cujo shield seja diferente do shield do personagem local.
+-- Não há bloqueio separado por guild, party, amizade ou distância do alvo.
+local function hasDifferentShieldNearby(range)
+  local localPlayer = g_game.getLocalPlayer()
+  if not localPlayer then return false end
+
+  local myShield = localPlayer:getShield() or 0
+  local pPos = localPlayer:getPosition()
+  for _, spec in ipairs(getSpectators(pPos.z, false) or {}) do
     if spec:isPlayer() and not spec:isLocalPlayer() then
       local specPos = spec:getPosition()
-      if specPos.z == pPos.z and getDistanceBetween(pPos, specPos) <= range then
-        if spec:getShield() >= 3 or spec:getEmblem() == 1 or isFriend(spec:getName()) then
-          return true
-        end
+      if specPos.z == pPos.z
+        and getDistanceBetween(pPos, specPos) <= range
+        and (spec:getShield() or 0) ~= myShield then
+        return true
       end
     end
   end
@@ -43,14 +44,14 @@ macro(1000, "Safe SD/UE", function()
   local target = g_game.getAttackingCreature()
   if not target then return end
 
-  -- Se for seguro (sem atingir amigos) e o alvo estiver a até 4 SQMs, usa UE
-  if not hasFriendNearby(8) and getDistanceBetween(pos(), target:getPosition()) <= 4 then
+  -- Continua usando UE; só troca para SD se encontrar um shield diferente.
+  if not hasDifferentShieldNearby(safeSettings.safeRange or 8) then
     local spell = safeSettings.Spell
     if spell and spell:match("%S") then
       say(spell)
     end
   else
-    -- Se não for seguro para UE, usa SD no alvo
+    -- Shield diferente por perto: não solta UE e usa SD no alvo.
     useWith(3155, target)
   end
 end)
