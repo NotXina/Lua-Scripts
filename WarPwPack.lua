@@ -17,12 +17,34 @@ addTextEdit("TxtEditSpell", safeSettings.Spell or "exevo gran mas frigo", functi
   safeSettings.Spell = text
 end)
 
+-- Verifica se tem amigo (party, guild ou lista de amigos) perto o bastante
+-- para ser atingido pela área. Não usa isSafe()/isFriend() puros do vBot
+-- porque isFriend() NÃO reconhece membro de guild (sem emblema) como amigo,
+-- e só reconhece membro de party se a opção "Group Members" da Player List
+-- do vBot estiver ligada. Checar o shield (party) e o emblem (guild/ally)
+-- diretamente evita soltar UE em cima de guild/party, igual aos outros
+-- modulos deste pack (Attack Players, UH No Time, etc).
+local function hasFriendNearby(range)
+  local pPos = pos()
+  for _, spec in ipairs(getSpectators(posz(), false) or {}) do
+    if spec:isPlayer() and not spec:isLocalPlayer() then
+      local specPos = spec:getPosition()
+      if specPos.z == pPos.z and getDistanceBetween(pPos, specPos) <= range then
+        if spec:getShield() >= 3 or spec:getEmblem() == 1 or isFriend(spec:getName()) then
+          return true
+        end
+      end
+    end
+  end
+  return false
+end
+
 macro(1000, "Safe SD/UE", function()
   local target = g_game.getAttackingCreature()
   if not target then return end
 
   -- Se for seguro (sem atingir amigos) e o alvo estiver a até 4 SQMs, usa UE
-  if isSafe(8) and getDistanceBetween(pos(), target:getPosition()) <= 4 then
+  if not hasFriendNearby(8) and getDistanceBetween(pos(), target:getPosition()) <= 4 then
     local spell = safeSettings.Spell
     if spell and spell:match("%S") then
       say(spell)

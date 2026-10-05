@@ -25,7 +25,32 @@
 --  AVISO: nao carregue este pack junto com os scripts avulsos equivalentes
 --  (MWSelfStep.lua, PotFriend.lua, AutoSioParty.lua, etc)
 --  para nao duplicar macros, callbacks, swappers e hotkeys.
+--
+--  EXCECAO: o IconesDashPack.lua PODE ficar ligado junto com este pack.
+--  Machete, icones de CaveBot/TargetBot, Dash, Invis, Mount, Utamo e Chase
+--  existem nos dois arquivos; eles usam "claimSharedIcon" (ver abaixo) para
+--  combinar entre si e garantir que só UM dos dois crie aquele icone/macro/
+--  hotkey, evitando duplicidade e o dobro de timers rodando (= menos lag).
 -- ============================================================================
+
+-- ============================================================================
+-- TRAVA COMPARTILHADA COM O IconesDashPack.lua
+-- ============================================================================
+xinaSharedIcons = xinaSharedIcons or {}
+
+-- "Reivindica" um modulo compartilhado com o IconesDashPack.lua. Retorna
+-- true só para quem chamar primeiro; expira sozinha depois de alguns
+-- segundos para não "perder" o icone caso os scripts sejam recarregados em
+-- momentos diferentes (ex.: editar e salvar só um dos dois arquivos no bot).
+local function claimSharedIcon(key)
+  local now = g_clock.millis()
+  local claimedAt = xinaSharedIcons[key]
+  if claimedAt and (now - claimedAt) < 3000 then
+    return false
+  end
+  xinaSharedIcons[key] = now
+  return true
+end
 
 -- ============================================================================
 -- CONFIGURACOES GERAIS
@@ -322,6 +347,28 @@ ui.setup.onClick = function()
   xcSafeSdWindow:focus()
 end
 
+-- Verifica se tem amigo (party, guild ou lista de amigos) perto o bastante
+-- para ser atingido pela área. Não usa isSafe()/isFriend() puros do vBot
+-- porque isFriend() NÃO reconhece membro de guild (sem emblema) como amigo,
+-- e só reconhece membro de party se a opção "Group Members" da Player List
+-- do vBot estiver ligada. Checar o shield (party) e o emblem (guild/ally)
+-- diretamente evita soltar UE em cima de guild/party, igual aos outros
+-- modulos deste pack (Attack Players, UH No Time, etc).
+local function hasFriendNearby(range)
+  local pPos = pos()
+  for _, spec in ipairs(getSpectators(posz(), false) or {}) do
+    if spec:isPlayer() and not spec:isLocalPlayer() then
+      local specPos = spec:getPosition()
+      if specPos.z == pPos.z and getDistanceBetween(pPos, specPos) <= range then
+        if spec:getShield() >= 3 or spec:getEmblem() == 1 or isFriend(spec:getName()) then
+          return true
+        end
+      end
+    end
+  end
+  return false
+end
+
 macro(1000, function()
   if not settings.enabled then return end
   local target = g_game.getAttackingCreature()
@@ -330,7 +377,7 @@ macro(1000, function()
   local maxDist = settings.targetDistance or 4
   local safeRange = settings.safeRange or 8
 
-  if isSafe(safeRange) and getDistanceBetween(pos(), target:getPosition()) <= maxDist then
+  if not hasFriendNearby(safeRange) and getDistanceBetween(pos(), target:getPosition()) <= maxDist then
     local spell = settings.Spell
     if spell and spell:match("%S") then
       say(spell)
@@ -466,20 +513,23 @@ macro(50, "Trapa em si (MW)", CONFIG.hkTrapSelfMw, function()
 end)
 
 -- 2.3 Machete / Tramontina no Wild Growth -----------------------------------
-addIcon("XC_Machete", {item = {id = CONFIG.macheteId, count = 1}, text = "Machete", hotkey = CONFIG.hkMachete},
-  macro(200, function()
-    local pPos = pos()
-    for _, off in ipairs(AROUND) do
-      local tile = tileAt(pPos, off[1], off[2])
-      if tile then
-        local topThing = tile:getTopThing()
-        if topThing and topThing:getId() == 2130 then
-          useWith(CONFIG.macheteId, topThing)
-          return
+-- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
+if claimSharedIcon("machete") then
+  addIcon("XC_Machete", {item = {id = CONFIG.macheteId, count = 1}, text = "Machete", hotkey = CONFIG.hkMachete},
+    macro(200, function()
+      local pPos = pos()
+      for _, off in ipairs(AROUND) do
+        local tile = tileAt(pPos, off[1], off[2])
+        if tile then
+          local topThing = tile:getTopThing()
+          if topThing and topThing:getId() == 2130 then
+            useWith(CONFIG.macheteId, topThing)
+            return
+          end
         end
       end
-    end
-  end))
+    end))
+end
 
 
 -- 2.4 Force Hold MW / WG ------------------------------------------------------
@@ -1088,15 +1138,18 @@ macro(500, "UH No Time (amigo)", function()
 end)
 
 -- 3.2 Renovacao inteligente do Utamo Vita -----------------------------------
-local nextUtamo = 0
-addIcon("XC_Utamo", {item = {id = 3548, count = 1}, text = "Utamo"}, macro(500, function()
-  local t = millis()
-  if not hasManaShield() or t > nextUtamo then
-    say("utamo vita")
-    nextUtamo = t + ((CONFIG.utamoDuration - CONFIG.utamoRenewEarly) * 1000)
-    delay(500)
-  end
-end))
+-- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
+if claimSharedIcon("utamo") then
+  local nextUtamo = 0
+  addIcon("XC_Utamo", {item = {id = 3548, count = 1}, text = "Utamo"}, macro(500, function()
+    local t = millis()
+    if not hasManaShield() or t > nextUtamo then
+      say("utamo vita")
+      nextUtamo = t + ((CONFIG.utamoDuration - CONFIG.utamoRenewEarly) * 1000)
+      delay(500)
+    end
+  end))
+end
 
 -- 3.3 Pot Friend e 3.4 Sio Friend -------------------------------------------
 -- Os dois controles ficam em linhas separadas para manter o painel limpo.
@@ -1880,55 +1933,67 @@ end
 section("Movimentacao")
 
 -- 5.1 Auto Chase (sem spam de pacotes) --------------------------------------
-addIcon("XC_Chase", {item = {id = 3555, count = 1}, text = "Chase"}, macro(500, function()
-  if g_game.getChaseMode() ~= 1 then
-    g_game.setChaseMode(1)
-  end
-end))
-
--- 5.2 Auto Mount ao sair do PZ ----------------------------------------------
-addIcon("XC_Mount", {item = {id = 390, count = 1}, text = "Mount"}, macro(3000, function()
-  if isInPz() then return end
-  local p = g_game.getLocalPlayer()
-  if p and not p:isMounted() then p:mount() end
-end))
-
--- 5.3 Auto Invis (utana vid) -------------------------------------------------
-addIcon("XC_Invis", {item = {id = 2202, count = 1}, text = "Invis"}, macro(5000, function()
-  local p = g_game.getLocalPlayer()
-  if p and not p:isInvisible() and not isInPz() then
-    say("utana vid")
-  end
-end))
-
--- 5.4 Bug Map Dash (W A S D / setas) ----------------------------------------
-local function dashTo(offX, offY)
-  local tile = tileAt(pos(), offX, offY)
-  if tile then
-    local top = tile:getTopUseThing()
-    if top then g_game.use(top) end
-  end
+-- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
+if claimSharedIcon("chase") then
+  addIcon("XC_Chase", {item = {id = 3555, count = 1}, text = "Chase"}, macro(500, function()
+    if g_game.getChaseMode() ~= 1 then
+      g_game.setChaseMode(1)
+    end
+  end))
 end
 
-local bugMap = macro(25, function()
-  local kb = g_keyboard
-  local d = CONFIG.dashDistance
-  if kb.isKeyPressed('Up') or kb.isKeyPressed('w') then
-    dashTo(0, -d)
-  elseif kb.isKeyPressed('Right') or kb.isKeyPressed('d') then
-    dashTo(d, 0)
-  elseif kb.isKeyPressed('Down') or kb.isKeyPressed('s') then
-    dashTo(0, d)
-  elseif kb.isKeyPressed('Left') or kb.isKeyPressed('a') then
-    dashTo(-d, 0)
-  end
-end)
-bugMap.setOff()
+-- 5.2 Auto Mount ao sair do PZ ----------------------------------------------
+-- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
+if claimSharedIcon("mount") then
+  addIcon("XC_Mount", {item = {id = 390, count = 1}, text = "Mount"}, macro(3000, function()
+    if isInPz() then return end
+    local p = g_game.getLocalPlayer()
+    if p and not p:isMounted() then p:mount() end
+  end))
+end
 
-addIcon("XC_Dash", {item = 3368, text = "DASH", hotkey = CONFIG.hkDash}, function(icon, isOn)
-  modules.game_console.consoleTextEdit:setVisible(not isOn)
-  bugMap.setOn(isOn)
-end)
+-- 5.3 Auto Invis (utana vid) -------------------------------------------------
+-- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
+if claimSharedIcon("invis") then
+  addIcon("XC_Invis", {item = {id = 2202, count = 1}, text = "Invis"}, macro(5000, function()
+    local p = g_game.getLocalPlayer()
+    if p and not p:isInvisible() and not isInPz() then
+      say("utana vid")
+    end
+  end))
+end
+
+-- 5.4 Bug Map Dash (W A S D / setas) ----------------------------------------
+-- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
+if claimSharedIcon("dash") then
+  local function dashTo(offX, offY)
+    local tile = tileAt(pos(), offX, offY)
+    if tile then
+      local top = tile:getTopUseThing()
+      if top then g_game.use(top) end
+    end
+  end
+
+  local bugMap = macro(25, function()
+    local kb = g_keyboard
+    local d = CONFIG.dashDistance
+    if kb.isKeyPressed('Up') or kb.isKeyPressed('w') then
+      dashTo(0, -d)
+    elseif kb.isKeyPressed('Right') or kb.isKeyPressed('d') then
+      dashTo(d, 0)
+    elseif kb.isKeyPressed('Down') or kb.isKeyPressed('s') then
+      dashTo(0, d)
+    elseif kb.isKeyPressed('Left') or kb.isKeyPressed('a') then
+      dashTo(-d, 0)
+    end
+  end)
+  bugMap.setOff()
+
+  addIcon("XC_Dash", {item = 3368, text = "DASH", hotkey = CONFIG.hkDash}, function(icon, isOn)
+    modules.game_console.consoleTextEdit:setVisible(not isOn)
+    bugMap.setOn(isOn)
+  end)
+end
 
 -- 5.5 Anti-Push com moedas (impede que te empurrem) -------------------------
 macro(100, "Anti-Push (moedas)", function()
@@ -2511,7 +2576,8 @@ Label
 end
 
 -- 7.3 Icones CaveBot / TargetBot com indicador ON-OFF ------------------------
-if CaveBot and TargetBot then
+-- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
+if CaveBot and TargetBot and claimSharedIcon("caveTargetIcons") then
   local cIcon = addIcon("XC_Cave", {text = "Cave\nBot", switchable = false, moveable = true}, function()
     if CaveBot.isOff() then CaveBot.setOn() else CaveBot.setOff() end
   end)
