@@ -38,17 +38,25 @@
 -- ============================================================================
 xinaSharedIcons = xinaSharedIcons or {}
 
+-- O g_clock não é exposto por todas as versões do OTCv8/vBot. Usa o relógio
+-- do vBot quando disponível e mantém fallbacks compatíveis para o carregamento.
+local function millis()
+  if type(now) == "number" then return now end
+  if g_clock and type(g_clock.millis) == "function" then return g_clock.millis() end
+  return os.time() * 1000
+end
+
 -- "Reivindica" um modulo compartilhado com o IconesDashPack.lua. Retorna
 -- true só para quem chamar primeiro; expira sozinha depois de alguns
 -- segundos para não "perder" o icone caso os scripts sejam recarregados em
 -- momentos diferentes (ex.: editar e salvar só um dos dois arquivos no bot).
 local function claimSharedIcon(key)
-  local now = g_clock.millis()
+  local timestamp = millis()
   local claimedAt = xinaSharedIcons[key]
-  if claimedAt and (now - claimedAt) < 3000 then
+  if claimedAt and (timestamp - claimedAt) < 3000 then
     return false
   end
-  xinaSharedIcons[key] = now
+  xinaSharedIcons[key] = timestamp
   return true
 end
 
@@ -133,10 +141,6 @@ local function useRuneOnTile(runeId, tile)
   if not target then return false end
   useWith(runeId, target)
   return true
-end
-
-local function millis()
-  return now or g_clock.millis()
 end
 
 -- ============================================================================
@@ -745,7 +749,7 @@ local function hasWall(tile)
 end
 
 local function castWall(runeId, tile, posKey, duration)
-  local t = now or g_clock.millis()
+  local t = millis()
   if (lastCast[posKey] or 0) + 400 > t then return end
 
   local target = tile:getTopUseThing() or tile:getGround()
@@ -760,7 +764,7 @@ macro(10, function()
   if not config.enabled then return end
   if #storage.xcMwPoses == 0 and #storage.xcWgPoses == 0 then return end
   local pPos = pos()
-  local t = now or g_clock.millis()
+  local t = millis()
   local preCast = config.preCastTime or 180
 
   -- MW Loop
@@ -829,7 +833,7 @@ local function togglePos(tbl, label, runeId, duration)
     table.insert(tbl, {x = p.x, y = p.y, z = p.z})
     tile:setText(label)
 
-    local t = now or g_clock.millis()
+    local t = millis()
     if not hasWall(tile) then
       castWall(runeId, tile, key, duration)
     else
