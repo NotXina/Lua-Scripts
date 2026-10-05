@@ -6,6 +6,7 @@
 --
 --    1. COMBATE          -> Attack Players, Auto SD, Safe SD/UE, Combo Attack,
 --                           Fast Paralyze Cure, Destroy Field, ocultar efeitos
+--                           e mensagens laranjas
 --    2. TRAP / MW        -> MW Self Step, Trapa em si, Trapa Alvo WG/MW,
 --                           Force Hold MW/WG, MW Enemy Step, Machete no WG
 --    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita, Pot Friend, Sio Friend
@@ -350,7 +351,111 @@ onAddThing(function(tile, thing)
   end
 end)
 
--- 1.7 Combo Attack por missil -------------------------------------------------
+-- 1.7 Esconde mensagens laranja (fala de monstro / orange text) --------------
+do
+-- Remove da tela (e do console) os textos laranjas: MESSAGE_STATUS_CONSOLE_ORANGE,
+-- fala/grito de monstro e qualquer texto estatico com a cor laranja padrao.
+-- Tudo em pcall porque os bindings mudam entre OTCv8 / OTClient Mehah.
+
+-- Modos de mensagem considerados laranja. Os nomes sao resolvidos quando a
+-- tabela MessageModes existe; os numeros sao o fallback (protocolos antigos).
+local orangeModeNames = {"MonsterSay", "MonsterYell", "BarkLow", "BarkLoud"}
+local orangeModes = {[36] = true, [43] = true, [44] = true}
+if type(MessageModes) == "table" then
+  for _, modeName in ipairs(orangeModeNames) do
+    local mode = MessageModes[modeName]
+    if type(mode) == "number" then orangeModes[mode] = true end
+  end
+end
+
+-- Cores laranjas usadas pelo client (fala de monstro = #FE6500).
+local orangeColors = {
+  {254, 101, 0},
+  {255, 165, 0},
+  {255, 128, 0},
+}
+
+local function isOrangeColor(color)
+  if type(color) ~= "table" then return false end
+  local r, g, b = color.r, color.g, color.b
+  if not r then r, g, b = color[1], color[2], color[3] end
+  if not r or not g or not b then return false end
+  -- Cores vem em 0-255 ou 0-1 dependendo da versao do client.
+  if r <= 1 and g <= 1 and b <= 1 then
+    r, g, b = r * 255, g * 255, b * 255
+  end
+  for _, c in ipairs(orangeColors) do
+    if math.abs(r - c[1]) <= 24 and math.abs(g - c[2]) <= 24 and math.abs(b - c[3]) <= 24 then
+      return true
+    end
+  end
+  return false
+end
+
+local function isOrangeStaticText(staticText)
+  if not staticText then return false end
+  local ok, mode = pcall(function() return staticText:getMessageMode() end)
+  if ok and type(mode) == "number" and orangeModes[mode] then return true end
+  local okColor, color = pcall(function() return staticText:getColor() end)
+  return okColor and isOrangeColor(color)
+end
+
+local function removeStaticText(staticText)
+  if pcall(function() g_map.removeThing(staticText) end) then return end
+  if pcall(function() staticText:removeFromMap() end) then return end
+  pcall(function() staticText:setColor({r = 0, g = 0, b = 0, a = 0}) end)
+end
+
+-- Limpa as linhas laranjas que ja entraram no console (CTRL+O / aba Default).
+local function cleanConsole()
+  pcall(function()
+    local console = modules.game_console
+    if not console or not console.consoleTabBar then return end
+    local tabs = console.consoleTabBar:getTabs()
+    if not tabs then return end
+    for _, tab in ipairs(tabs) do
+      local panel = tab.tabPanel and tab.tabPanel:getChildById("consoleBuffer")
+      if panel then
+        local children = panel:getChildren()
+        for i = #children, math.max(1, #children - 20), -1 do
+          local label = children[i]
+          if label and isOrangeColor(label:getColor()) then
+            label:destroy()
+          end
+        end
+      end
+    end
+  end)
+end
+
+local hideOrangeMessages = macro(50, "Esconde Msg Laranja", function()
+  if not g_map or not g_map.getStaticTexts then return end
+  local ok, texts = pcall(function() return g_map.getStaticTexts() end)
+  if not ok or type(texts) ~= "table" then return end
+  for _, staticText in ipairs(texts) do
+    if isOrangeStaticText(staticText) then
+      removeStaticText(staticText)
+    end
+  end
+end)
+
+-- Assim que chega uma mensagem laranja, limpa na hora (sem esperar o macro).
+local function onOrangeMessage(mode)
+  if hideOrangeMessages.isOff() then return end
+  if type(mode) == "number" and not orangeModes[mode] then return end
+  cleanConsole()
+end
+
+onTextMessage(function(mode, text)
+  onOrangeMessage(mode)
+end)
+
+onTalk(function(authorName, level, mode, text, channelId, talkPosition)
+  onOrangeMessage(mode)
+end)
+end
+
+-- 1.8 Combo Attack por missil -------------------------------------------------
 do
 -- ============================================================================
 -- COMBO ATTACK COM LÍDERES (DETECÇÃO DE MÍSSIL/SD)
