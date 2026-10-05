@@ -1,5 +1,5 @@
 -- ============================================================================
--- AUTO USE ITEMS (USA TODOS OS ITENS EM INTERVALOS CONFIGURAVEIS)
+-- AUTO USE ITEMS (USA TODOS OS ITENS FORA DE PZ EM INTERVALOS CONFIGURAVEIS)
 -- Tested on OTCv8 3.2 / vBot 4.8
 -- ============================================================================
 
@@ -54,7 +54,7 @@ AutoUseItemsWindow < MainWindow
     anchors.top: prev.bottom
     margin-top: 5
     text-align: center
-    text: Ao ligar, usa uma vez e inicia o intervalo
+    text: So usa os itens quando estiver fora de PZ
 
   HorizontalSeparator
     anchors.left: parent.left
@@ -164,9 +164,11 @@ end
 
 local generation = 0
 local nextCycleAt = nil
+local cycleRunning = false
 
 local function resetCycle(useSoon)
-  generation = generation + 1 -- cancela usos agendados do ciclo anterior
+  generation = generation + 1 -- cancela o ciclo anterior
+  cycleRunning = false
   if not settings.enabled then
     nextCycleAt = nil
     return
@@ -182,23 +184,40 @@ end
 local function useConfiguredItems()
   generation = generation + 1
   local currentGeneration = generation
-  local useDelay = 0
+  local cycleItems = {}
 
   -- Percorre por indice para manter a ordem e nao parar em slots vazios.
   for i = 1, 15 do
     local itemId = tonumber(settings.items[i]) or 0
     if itemId > 0 then
-      local scheduledItemId = itemId
-      schedule(useDelay, function()
-        if settings.enabled and generation == currentGeneration then
-          use(scheduledItemId)
-        end
-      end)
-      useDelay = useDelay + 500
+      table.insert(cycleItems, itemId)
     end
   end
 
-  nextCycleAt = millis() + (settings.timeMinutes * 60000)
+  cycleRunning = true
+  nextCycleAt = nil
+
+  local useNextItem
+  useNextItem = function(index)
+    if not settings.enabled or generation ~= currentGeneration then return end
+
+    if index > #cycleItems then
+      cycleRunning = false
+      nextCycleAt = millis() + (settings.timeMinutes * 60000)
+      return
+    end
+
+    -- Se entrar em PZ durante a sequencia, pausa e continua ao sair.
+    if isInPz() then
+      schedule(500, function() useNextItem(index) end)
+      return
+    end
+
+    use(cycleItems[index])
+    schedule(500, function() useNextItem(index + 1) end)
+  end
+
+  useNextItem(1)
 end
 
 autoUseItemsWindow.intervalScroll.onValueChange = function(_, value)
@@ -231,7 +250,8 @@ end
 resetCycle(settings.enabled)
 
 macro(500, function()
-  if not settings.enabled or not nextCycleAt then return end
+  if not settings.enabled or cycleRunning or not nextCycleAt then return end
+  if isInPz() then return end
   if millis() >= nextCycleAt then
     useConfiguredItems()
   end

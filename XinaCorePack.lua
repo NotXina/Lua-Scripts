@@ -12,7 +12,7 @@
 --    4. EQUIPAMENTOS     -> Smart Energy Ring, Energy Ring, Ring Invertido
 --    5. MOVIMENTACAO     -> Chase, Mount, Invis, Dash, Anti-Push, Flores,
 --
---    6. UTILITARIOS      -> Pick-Up Items, Stamina Items, Vende Tudo
+--    6. UTILITARIOS      -> Pick-Up Items, Stamina, Auto Use Items, Vende Tudo
 --    7. HUD & INTERFACE  -> Target HUD, Coordenadas no minimapa,
 --                           Icones CaveBot / TargetBot, SDMAX / PARAMAX / AVAMAX
 --
@@ -2417,7 +2417,269 @@ staminaUI.status.onClick = function(widget)
 end
 end
 
--- 6.3 Vende Tudo --------------------------------------------------------------
+-- 6.3 Auto Use Items ----------------------------------------------------------
+do
+-- ============================================================================
+-- AUTO USE ITEMS (USA TODOS OS ITENS FORA DE PZ EM INTERVALOS CONFIGURAVEIS)
+-- Tested on OTCv8 3.2 / vBot 4.8
+-- ============================================================================
+
+local settingsKey = "xcAutoUseItemsSettings"
+local defaultItems = {3215, 9642, 3726, 11454, 945, 10293, 10306, 10316, 11455}
+
+storage[settingsKey] = type(storage[settingsKey]) == "table" and storage[settingsKey] or {}
+local settings = storage[settingsKey]
+
+if type(settings.enabled) ~= "boolean" then settings.enabled = false end
+if type(settings.timeMinutes) ~= "number" then settings.timeMinutes = 31 end
+if type(settings.items) ~= "table" then settings.items = defaultItems end
+settings.timeMinutes = math.max(1, math.min(60, settings.timeMinutes))
+
+-- Mantem os 15 slots numericos, inclusive os vazios, para nao perder itens
+-- que estejam depois de um slot em branco.
+for i = 1, 15 do
+  local value = settings.items[i]
+  if type(value) == "table" then value = value.id end
+  settings.items[i] = tonumber(value) or 0
+end
+
+if xcAutoUseItemsWindow then xcAutoUseItemsWindow:destroy() end
+
+g_ui.loadUIFromString([[
+XcAutoUseItemsWindow < MainWindow
+  text: Auto Use Items Setup
+  size: 230 255
+  @onEscape: self:hide()
+
+  Label
+    id: intervalLabel
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: parent.top
+    text-align: center
+    text: Intervalo: 31 minutos
+
+  HorizontalScrollBar
+    id: intervalScroll
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 5
+    minimum: 1
+    maximum: 60
+    step: 1
+
+  Label
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 5
+    text-align: center
+    text: So usa os itens quando estiver fora de PZ
+
+  HorizontalSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 7
+
+  Label
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 5
+    text-align: center
+    text: Itens usados na ordem dos slots
+
+  ItemsRow
+    id: itemsRow1
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 3
+
+  ItemsRow
+    id: itemsRow2
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 2
+
+  ItemsRow
+    id: itemsRow3
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.top: prev.bottom
+    margin-top: 2
+
+  HorizontalSeparator
+    anchors.left: parent.left
+    anchors.right: parent.right
+    anchors.bottom: closeButton.top
+    margin-bottom: 8
+
+  Button
+    id: closeButton
+    text: Close
+    font: cipsoftFont
+    anchors.right: parent.right
+    anchors.bottom: parent.bottom
+    size: 45 21
+]])
+
+xcAutoUseItemsWindow = UI.createWindow('XcAutoUseItemsWindow', g_ui.getRootWidget())
+xcAutoUseItemsWindow:hide()
+
+local xcAutoUseItemsUI = setupUI([[
+Panel
+  height: 20
+
+  BotSwitch
+    id: status
+    anchors.top: parent.top
+    anchors.left: parent.left
+    width: 130
+    height: 18
+    text: Usar Itens: 31m
+
+  Button
+    id: setup
+    anchors.top: prev.top
+    anchors.left: prev.right
+    anchors.right: parent.right
+    margin-left: 3
+    height: 17
+    text: Setup
+]], parent)
+
+local function millis()
+  if type(now) == "number" then return now end
+  if g_clock and type(g_clock.millis) == "function" then return g_clock.millis() end
+  return os.time() * 1000
+end
+
+local function updateText()
+  local minutes = settings.timeMinutes
+  local suffix = minutes == 1 and " minuto" or " minutos"
+  xcAutoUseItemsWindow.intervalLabel:setText("Intervalo: " .. minutes .. suffix)
+  xcAutoUseItemsUI.status:setText("Usar Itens: " .. minutes .. "m")
+end
+
+local itemRows = {
+  xcAutoUseItemsWindow.itemsRow1,
+  xcAutoUseItemsWindow.itemsRow2,
+  xcAutoUseItemsWindow.itemsRow3
+}
+
+for i = 1, 15 do
+  local slotIndex = i
+  local rowIndex = math.floor((slotIndex - 1) / 5) + 1
+  local childIndex = ((slotIndex - 1) % 5) + 1
+  local itemWidget = itemRows[rowIndex]:getChildByIndex(childIndex)
+
+  itemWidget.onItemChange = function(widget)
+    settings.items[slotIndex] = widget:getItemId() or 0
+  end
+  itemWidget:setItemId(settings.items[slotIndex])
+end
+
+local generation = 0
+local nextCycleAt = nil
+local cycleRunning = false
+
+local function resetCycle(useSoon)
+  generation = generation + 1 -- cancela o ciclo anterior
+  cycleRunning = false
+  if not settings.enabled then
+    nextCycleAt = nil
+    return
+  end
+
+  if useSoon then
+    nextCycleAt = millis() + 1000
+  else
+    nextCycleAt = millis() + (settings.timeMinutes * 60000)
+  end
+end
+
+local function useConfiguredItems()
+  generation = generation + 1
+  local currentGeneration = generation
+  local cycleItems = {}
+
+  -- Percorre por indice para manter a ordem e nao parar em slots vazios.
+  for i = 1, 15 do
+    local itemId = tonumber(settings.items[i]) or 0
+    if itemId > 0 then
+      table.insert(cycleItems, itemId)
+    end
+  end
+
+  cycleRunning = true
+  nextCycleAt = nil
+
+  local useNextItem
+  useNextItem = function(index)
+    if not settings.enabled or generation ~= currentGeneration then return end
+
+    if index > #cycleItems then
+      cycleRunning = false
+      nextCycleAt = millis() + (settings.timeMinutes * 60000)
+      return
+    end
+
+    -- Se entrar em PZ durante a sequencia, pausa e continua ao sair.
+    if isInPz() then
+      schedule(500, function() useNextItem(index) end)
+      return
+    end
+
+    use(cycleItems[index])
+    schedule(500, function() useNextItem(index + 1) end)
+  end
+
+  useNextItem(1)
+end
+
+xcAutoUseItemsWindow.intervalScroll.onValueChange = function(_, value)
+  settings.timeMinutes = value
+  updateText()
+  resetCycle(false)
+end
+
+xcAutoUseItemsWindow.intervalScroll:setValue(settings.timeMinutes)
+updateText()
+
+xcAutoUseItemsWindow.closeButton.onClick = function()
+  xcAutoUseItemsWindow:hide()
+end
+
+xcAutoUseItemsUI.setup.onClick = function()
+  xcAutoUseItemsWindow:show()
+  xcAutoUseItemsWindow:raise()
+  xcAutoUseItemsWindow:focus()
+end
+
+xcAutoUseItemsUI.status:setOn(settings.enabled)
+xcAutoUseItemsUI.status.onClick = function(widget)
+  settings.enabled = not settings.enabled
+  widget:setOn(settings.enabled)
+  resetCycle(settings.enabled)
+end
+
+-- Ao recarregar o script ligado, inicia um novo ciclo em um segundo.
+resetCycle(settings.enabled)
+
+macro(500, function()
+  if not settings.enabled or cycleRunning or not nextCycleAt then return end
+  if isInPz() then return end
+  if millis() >= nextCycleAt then
+    useConfiguredItems()
+  end
+end)
+end
+
+-- 6.4 Vende Tudo --------------------------------------------------------------
 do
 -- ============================================================================
 -- VENDE TUDO (OTIMIZADO COM TABELA HASH O(1))
