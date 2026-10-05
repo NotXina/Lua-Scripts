@@ -46,19 +46,45 @@ local function millis()
   return os.time() * 1000
 end
 
--- "Reivindica" um modulo compartilhado com o IconesDashPack.lua. Retorna
--- true só para quem chamar primeiro; expira sozinha depois de alguns
--- segundos para não "perder" o icone caso os scripts sejam recarregados em
--- momentos diferentes (ex.: editar e salvar só um dos dois arquivos no bot).
+-- Cada pack atualiza um heartbeat das reivindicacoes que possui. Assim a trava
+-- nao expira enquanto o dono estiver carregado, mas uma reivindicacao abandonada
+-- pode ser assumida depois de alguns segundos. A tabela de donos separada mantem
+-- compatibilidade com versoes antigas, que armazenavam apenas o timestamp.
+xinaSharedIconOwners = xinaSharedIconOwners or {}
+local SHARED_ICON_OWNER = "xinaCore"
+local SHARED_ICON_TTL = 3000
+
+for key, claimedOwner in pairs(xinaSharedIconOwners) do
+  if claimedOwner == SHARED_ICON_OWNER then
+    xinaSharedIcons[key] = nil
+    xinaSharedIconOwners[key] = nil
+  end
+end
+
 local function claimSharedIcon(key)
   local timestamp = millis()
   local claimedAt = xinaSharedIcons[key]
-  if claimedAt and (timestamp - claimedAt) < 3000 then
+  local activeClaim = type(claimedAt) ~= "number"
+    or (timestamp - claimedAt) < SHARED_ICON_TTL
+
+  if claimedAt ~= nil and activeClaim then
     return false
   end
+
   xinaSharedIcons[key] = timestamp
+  xinaSharedIconOwners[key] = SHARED_ICON_OWNER
   return true
 end
+
+-- Impede que o segundo pack crie copias caso seja carregado muito tempo depois.
+macro(1000, function()
+  local timestamp = millis()
+  for key, claimedOwner in pairs(xinaSharedIconOwners) do
+    if claimedOwner == SHARED_ICON_OWNER then
+      xinaSharedIcons[key] = timestamp
+    end
+  end
+end)
 
 -- ============================================================================
 -- CONFIGURACOES GERAIS
@@ -124,6 +150,11 @@ local AROUND = {
   {-1,  1}, { 0,  1}, { 1,  1}
 }
 
+local FLOWER_ID_SET = {}
+for _, flowerId in ipairs(CONFIG.flowerIds) do
+  FLOWER_ID_SET[flowerId] = true
+end
+
 local function tileAt(centerPos, offX, offY)
   if not centerPos then return nil end
   return g_map.getTile({x = centerPos.x + offX, y = centerPos.y + offY, z = centerPos.z})
@@ -159,15 +190,18 @@ macro(100, "Attack Players (menor HP)", CONFIG.hkAttackPlayers, function()
     if creature:isPlayer() then
       local cName = creature:getName()
       local hp = creature:getHealthPercent()
-      local dist = getDistanceBetween(pPos, creature:getPosition())
       local valid = cName:lower() ~= myName
         and hp and hp > 0
         and not isFriend(cName)
         and (creature:getShield() or 0) < 3
         and (creature:getEmblem() or 0) ~= 1
 
-      if valid and (hp < lowestHp or (hp == lowestHp and dist < closestDist)) then
-        lowestHp, closestDist, targetPlayer = hp, dist, creature
+      if valid then
+        local creaturePos = creature:getPosition()
+        local dist = creaturePos and getDistanceBetween(pPos, creaturePos) or math.huge
+        if hp < lowestHp or (hp == lowestHp and dist < closestDist) then
+          lowestHp, closestDist, targetPlayer = hp, dist, creature
+        end
       end
     end
   end
@@ -184,6 +218,7 @@ macro(100, "Auto SD no alvo", function()
   local target = g_game.getAttackingCreature()
   if not target then return end
   local tPos = target:getPosition()
+  if not tPos then return end
   if tPos.z == posz() and getDistanceBetween(pos(), tPos) <= CONFIG.sdMaxDistance then
     useWith(CONFIG.sdId, target)
     delay(200)
@@ -246,7 +281,7 @@ macro(150, "Auto Destroy Field", function()
     local flowerTile = tileAt(pPos, off[1], off[2])
     if flowerTile then
       for _, item in ipairs(flowerTile:getItems() or {}) do
-        if table.find(CONFIG.flowerIds, item:getId()) then
+        if FLOWER_ID_SET[item:getId()] then
           useWith(CONFIG.disintegrateId, item)
           delay(300)
           return
@@ -257,7 +292,7 @@ macro(150, "Auto Destroy Field", function()
 end)
 
 
--- 1.5 Safe SD / UE ------------------------------------------------------------
+-- 1.6 Safe SD / UE ------------------------------------------------------------
 do
 -- ============================================================================
 -- SAFE SD / UE (COM SETUP WINDOW)
@@ -414,7 +449,7 @@ macro(1000, function()
 end)
 end
 
--- 1.6 Tela Limpa ------------------------------------------------------------
+-- 1.7 Tela Limpa ------------------------------------------------------------
 local telaLimpa = macro(100, "Tela Limpa", function() end)
 
 onStaticText(function(thing, text)
@@ -440,7 +475,7 @@ onTextMessage(function(mode, text)
 end)
 
 
--- 1.7 Combo Attack por missil -------------------------------------------------
+-- 1.8 Combo Attack por missil -------------------------------------------------
 do
 -- ============================================================================
 -- COMBO ATTACK COM LÍDERES (DETECÇÃO DE MÍSSIL/SD)
@@ -578,11 +613,12 @@ local config = storage.xcForceHoldSettings
 local mwDuration = 20000
 local wgDuration = 45000
 
-storage.xcMwPoses = storage.xcMwPoses or {}
-storage.xcWgPoses = storage.xcWgPoses or {}
+storage.xcMwPoses = type(storage.xcMwPoses) == "table" and storage.xcMwPoses or {}
+storage.xcWgPoses = type(storage.xcWgPoses) == "table" and storage.xcWgPoses or {}
 
 local wallTimers = {}
 local lastCast = {}
+local lastWallText = {}
 
 local wallIds = {
   [2128] = true, [2129] = true, [2130] = true, [2131] = true,
@@ -708,6 +744,7 @@ xc_cleanBtn.onClick = function()
   storage.xcWgPoses = {}
   wallTimers = {}
   lastCast = {}
+  lastWallText = {}
 end
 
 xc_closeButton.onClick = function()
@@ -782,7 +819,16 @@ local function castWall(runeId, tile, posKey, duration)
   end
 end
 
-macro(10, function()
+local function setWallText(tile, key, text)
+  local previous = lastWallText[key]
+  if previous and previous.tile == tile and previous.text == text then return end
+  tile:setText(text)
+  lastWallText[key] = {tile = tile, text = text}
+end
+
+-- O menor pre-cast configuravel e 50ms; executar a cada 10ms apenas repetia
+-- varreduras e atualizacoes de texto sem melhorar a precisao util.
+macro(50, function()
   if not config.enabled then return end
   if #storage.xcMwPoses == 0 and #storage.xcWgPoses == 0 then return end
   local pPos = pos()
@@ -798,12 +844,12 @@ macro(10, function()
         if hasWall(tile) then
           if not wallTimers[key] then wallTimers[key] = t + mwDuration end
           local remaining = math.max(0, (wallTimers[key] - t) / 1000)
-          tile:setText(string.format("MW\n%.1fs", remaining))
+          setWallText(tile, key, string.format("MW\n%.1fs", remaining))
           if (wallTimers[key] - t) <= preCast then
             castWall(config.mwId or 3180, tile, key, mwDuration)
           end
         else
-          tile:setText("MW\n0.0s")
+          setWallText(tile, key, "MW\n0.0s")
           castWall(config.mwId or 3180, tile, key, mwDuration)
         end
       end
@@ -819,12 +865,12 @@ macro(10, function()
         if hasWall(tile) then
           if not wallTimers[key] then wallTimers[key] = t + wgDuration end
           local remaining = math.max(0, (wallTimers[key] - t) / 1000)
-          tile:setText(string.format("WG\n%.1fs", remaining))
+          setWallText(tile, key, string.format("WG\n%.1fs", remaining))
           if (wallTimers[key] - t) <= preCast then
             castWall(config.wgId or 3156, tile, key, wgDuration)
           end
         else
-          tile:setText("WG\n0.0s")
+          setWallText(tile, key, "WG\n0.0s")
           castWall(config.wgId or 3156, tile, key, wgDuration)
         end
       end
@@ -851,9 +897,11 @@ local function togglePos(tbl, label, runeId, duration)
     tile:setText("")
     table.remove(tbl, foundIndex)
     wallTimers[key] = nil
+    lastCast[key] = nil
+    lastWallText[key] = nil
   else
     table.insert(tbl, {x = p.x, y = p.y, z = p.z})
-    tile:setText(label)
+    setWallText(tile, key, label)
 
     local t = millis()
     if not hasWall(tile) then
@@ -1553,6 +1601,7 @@ onTalk(function(authorName, level, mode, text, channelId, talkPosition)
   useWith(potSettings.potion, friend)
 
   schedule(350, function()
+    if not potSettings.enabled then return end
     local currentFriend = getCreatureByName(authorName)
     if not currentFriend then return end
     local currentPosition = currentFriend:getPosition()
@@ -1598,11 +1647,15 @@ macro(50, "Smart Energy Ring", function()
   if hp <= CONFIG.eRingEquipHp then
     if not ring or ring:getId() ~= CONFIG.energyRingId then
       g_game.equipItemId(CONFIG.energyRingId)
+      delay(250) -- evita spam de pacotes enquanto o servidor confirma o slot
     end
   elseif hp >= CONFIG.eRingUnequipHp then
     if ring and ring:getId() == CONFIG.energyRingId then
       local bp = getBack()
-      if bp then g_game.move(ring, bp:getPosition(), 1) end
+      if bp then
+        g_game.move(ring, bp:getPosition(), 1)
+        delay(250)
+      end
     end
   end
 end)
@@ -2027,8 +2080,15 @@ macro(100, "Anti-Push (moedas)", function()
   local tile = g_map.getTile(pPos)
   if not tile then return end
 
-  local top = tile:getTopThing()
-  if not top or top:getId() ~= CONFIG.trashId then
+  local hasTrash = false
+  for _, tileItem in ipairs(tile:getItems() or {}) do
+    if tileItem:getId() == CONFIG.trashId then
+      hasTrash = true
+      break
+    end
+  end
+
+  if not hasTrash then
     local item = findItem(CONFIG.trashId)
     if item then g_game.move(item, pPos, 1) end
   end
@@ -2037,8 +2097,10 @@ end)
 -- 5.6 Flores nos 8 SQMs ao redor (anti-trap / anti-push) ---------------------
 local function hasFlower(tile)
   if not tile then return false end
-  local item = tile:getTopThing()
-  return item and table.find(CONFIG.flowerIds, item:getId())
+  for _, item in ipairs(tile:getItems() or {}) do
+    if FLOWER_ID_SET[item:getId()] then return true end
+  end
+  return false
 end
 
 local function findFlower()
@@ -2137,8 +2199,29 @@ XcPickupSetupWindow < MainWindow
 xcPickupSetupWindow = UI.createWindow('XcPickupSetupWindow', g_ui.getRootWidget())
 xcPickupSetupWindow:hide()
 
+-- Os mapas de IDs só mudam quando o setup muda. Reconstrui-los a cada 200ms
+-- gerava alocacoes desnecessarias durante toda a execucao do bot.
+local pickMap = {}
+local destBpMap = {}
+local function rebuildPickMaps()
+  pickMap = {}
+  for _, item in ipairs(storage.xcPickUp) do
+    local id = type(item) == "table" and item.id or item
+    id = tonumber(id)
+    if id and id > 0 then pickMap[id] = true end
+  end
+
+  destBpMap = {}
+  for _, bp in ipairs(storage.xcContainerPickUp) do
+    local id = type(bp) == "table" and bp.id or bp
+    id = tonumber(id)
+    if id and id > 0 then destBpMap[id] = true end
+  end
+end
+
 local pickUpContainer = UI.Container(function(widget, items)
   storage.xcPickUp = items
+  rebuildPickMaps()
 end, true)
 pickUpContainer:setParent(xcPickupSetupWindow.pickOnlyPanel)
 pickUpContainer:fill('parent')
@@ -2146,10 +2229,12 @@ pickUpContainer:setItems(storage.xcPickUp)
 
 local containerpickUpContainer = UI.Container(function(widget, items)
   storage.xcContainerPickUp = items
+  rebuildPickMaps()
 end, true)
 containerpickUpContainer:setParent(xcPickupSetupWindow.pickContainerPanel)
 containerpickUpContainer:fill('parent')
 containerpickUpContainer:setItems(storage.xcContainerPickUp)
+rebuildPickMaps()
 
 xcPickupSetupWindow.closeButton.onClick = function()
   xcPickupSetupWindow:hide()
@@ -2207,19 +2292,24 @@ end
 
 -- Macro Otimizado de Pick-Up (200ms com busca rápida O(1))
 macro(200, function()
-  if storage.xcPickEnabled ~= 1 or freecap() < 150 or not storage.xcPickUp[1] then return end
+  if storage.xcPickEnabled ~= 1 or freecap() < 150 then return end
+  if not next(pickMap) or not next(destBpMap) then return end
 
-  local pickMap = {}
-  for _, item in ipairs(storage.xcPickUp) do
-    local id = type(item) == "table" and item.id or item
-    if id then pickMap[id] = true end
+  -- Localiza uma mochila de destino uma vez por ciclo, em vez de repetir a
+  -- busca pelos 16 containers para cada item encontrado no chao.
+  local destination = nil
+  for idx = 0, 15 do
+    local container = g_game.getContainer(idx)
+    if container then
+      local cItem = container:getContainerItem()
+      if cItem and destBpMap[cItem:getId()]
+        and container:getItemsCount() < container:getCapacity() then
+        destination = container
+        break
+      end
+    end
   end
-
-  local destBpMap = {}
-  for _, bp in ipairs(storage.xcContainerPickUp) do
-    local id = type(bp) == "table" and bp.id or bp
-    if id then destBpMap[id] = true end
-  end
+  if not destination then return end
 
   local pPos = pos()
   local r = storage.xcPickRange
@@ -2230,19 +2320,10 @@ macro(200, function()
       if tile then
         for _, item in ipairs(tile:getItems() or {}) do
           if item and pickMap[item:getId()] then
-            for idx = 0, 15 do
-              local container = g_game.getContainer(idx)
-              if container then
-                local cItem = container:getContainerItem()
-                if cItem and destBpMap[cItem:getId()] then
-                  if container:getItemsCount() < container:getCapacity() then
-                    g_game.move(item, container:getSlotPosition(container:getItemsCount()), item:getCount())
-                    delay(250)
-                    return
-                  end
-                end
-              end
-            end
+            local slot = destination:getItemsCount()
+            g_game.move(item, destination:getSlotPosition(slot), item:getCount())
+            delay(250)
+            return
           end
         end
       end
@@ -2267,6 +2348,11 @@ do
 local panelName = "xcStaminaItemsUser"
 storage[panelName] = storage[panelName] or { min = 0, max = 40, items = {11588} }
 if type(storage[panelName].items) ~= "table" then storage[panelName].items = {11588} end
+for i = 1, 5 do
+  local value = storage[panelName].items[i]
+  if type(value) == "table" then value = value.id end
+  storage[panelName].items[i] = tonumber(value) or 0
+end
 storage.xcStaminaEnabled = storage.xcStaminaEnabled or 0
 
 if xcStaminaSetupWindow then xcStaminaSetupWindow:destroy() end
@@ -2357,10 +2443,11 @@ xcStaminaSetupWindow.scroll2.onValueChange = function(w, v)
 end
 
 for i = 1, 5 do
-  xcStaminaSetupWindow.items:getChildByIndex(i).onItemChange = function(w)
-    storage[panelName].items[i] = w:getItemId()
+  local slotIndex = i
+  xcStaminaSetupWindow.items:getChildByIndex(slotIndex).onItemChange = function(w)
+    storage[panelName].items[slotIndex] = w:getItemId() or 0
   end
-  xcStaminaSetupWindow.items:getChildByIndex(i):setItemId(storage[panelName].items[i])
+  xcStaminaSetupWindow.items:getChildByIndex(slotIndex):setItemId(storage[panelName].items[slotIndex])
 end
 
 xcStaminaSetupWindow.closeButton.onClick = function()
@@ -2398,8 +2485,10 @@ macro(1000, function()
   local stHours = stamina() / 60
   if stHours < storage[panelName].min or stHours > storage[panelName].max then return end
 
-  for _, itemId in ipairs(storage[panelName].items) do
-    if itemId and itemId >= 100 then
+  -- Itera os cinco slots por indice para nao parar no primeiro slot vazio.
+  for i = 1, 5 do
+    local itemId = tonumber(storage[panelName].items[i]) or 0
+    if itemId >= 100 then
       local it = findItem(itemId)
       if it then
         g_game.use(it)
@@ -2769,12 +2858,24 @@ XcSellSetupWindow < MainWindow
 xcSellSetupWindow = UI.createWindow('XcSellSetupWindow', g_ui.getRootWidget())
 xcSellSetupWindow:hide()
 
+local sellMap = {}
+local function rebuildSellMap()
+  sellMap = {}
+  for _, item in ipairs(storage.xcItemsToSell) do
+    local id = type(item) == "table" and item.id or item
+    id = tonumber(id)
+    if id and id > 0 then sellMap[id] = true end
+  end
+end
+
 local sellContainer = UI.Container(function(widget, items)
   storage.xcItemsToSell = items
+  rebuildSellMap()
 end, true)
 sellContainer:setParent(xcSellSetupWindow.sellContainer)
 sellContainer:fill('parent')
 sellContainer:setItems(storage.xcItemsToSell)
+rebuildSellMap()
 
 xcSellSetupWindow.closeButton.onClick = function()
   xcSellSetupWindow:hide()
@@ -2807,13 +2908,7 @@ sellUI.btnSetup.onClick = function()
 end
 
 macro(200, function()
-  if storage.xcSellEnabled ~= 1 then return end
-
-  local sellMap = {}
-  for _, it in ipairs(storage.xcItemsToSell) do
-    local id = type(it) == "table" and it.id or it
-    if id then sellMap[id] = true end
-  end
+  if storage.xcSellEnabled ~= 1 or not next(sellMap) then return end
 
   for idx = 0, 15 do
     local container = g_game.getContainer(idx)
@@ -2871,6 +2966,7 @@ Panel
 ]], g_ui.getRootWidget())
 
 local targetHudText = xcTargetHud:getChildById('text')
+local lastTargetHudText = nil
 xcTargetHud:show()
 xcTargetHud:raise()
 
@@ -2878,20 +2974,25 @@ macro(100, "Target HUD", function()
   local target = g_game.getAttackingCreature()
   local targetPos = target and target:getPosition()
   local myPos = pos()
+  local newText
 
   if target and targetPos and myPos then
     local hp = math.floor(tonumber(target:getHealthPercent()) or 0)
     local distance = math.floor(getDistanceBetween(myPos, targetPos) or 0)
     local targetType = target:isPlayer() and "PLAYER" or "CREATURE"
 
-    targetHudText:setText(string.format("ALVO %s: %s | HP: %d%% | DIST: %d",
-      targetType, target:getName() or "?", hp, distance))
+    newText = string.format("ALVO %s: %s | HP: %d%% | DIST: %d",
+      targetType, target:getName() or "?", hp, distance)
   else
     -- Deixa uma mensagem curta visivel para confirmar que o HUD esta ativo.
-    targetHudText:setText("TARGET HUD: ataque um alvo para ver HP e distancia")
+    newText = "TARGET HUD: ataque um alvo para ver HP e distancia"
   end
 
-  xcTargetHud:show()
+  -- Evita invalidar/redesenhar o widget 10 vezes por segundo sem mudanca.
+  if newText ~= lastTargetHudText then
+    targetHudText:setText(newText)
+    lastTargetHudText = newText
+  end
 end)
 
 -- 7.2 Coordenadas no minimapa ------------------------------------------------
@@ -2911,10 +3012,15 @@ Label
   text: ""
 ]], minimap)
 
-  onPlayerPositionChange(function(newPos)
+  local function updateCoords(newPos)
     if coordLabel and newPos then
       coordLabel:setText(newPos.x .. ', ' .. newPos.y .. ', ' .. newPos.z)
     end
+  end
+
+  updateCoords(pos())
+  onPlayerPositionChange(function(newPos)
+    updateCoords(newPos)
   end)
 end
 
@@ -2939,20 +3045,29 @@ if claimSharedIcon("caveTargetIcons") then
     tIcon.text:setFont('verdana-11px-rounded')
   end
 
+  local lastCaveState, lastTargetState = nil, nil
   macro(300, function()
     if cIcon and CaveBot then
-      if CaveBot.isOn() then
-        cIcon.text:setColoredText({"CaveBot\n", "white", "ON", "green"})
-      else
-        cIcon.text:setColoredText({"CaveBot\n", "white", "OFF", "red"})
+      local caveState = CaveBot.isOn()
+      if caveState ~= lastCaveState then
+        if caveState then
+          cIcon.text:setColoredText({"CaveBot\n", "white", "ON", "green"})
+        else
+          cIcon.text:setColoredText({"CaveBot\n", "white", "OFF", "red"})
+        end
+        lastCaveState = caveState
       end
     end
 
     if tIcon and TargetBot then
-      if TargetBot.isOn() then
-        tIcon.text:setColoredText({"Target\n", "white", "ON", "green"})
-      else
-        tIcon.text:setColoredText({"Target\n", "white", "OFF", "red"})
+      local targetState = TargetBot.isOn()
+      if targetState ~= lastTargetState then
+        if targetState then
+          tIcon.text:setColoredText({"Target\n", "white", "ON", "green"})
+        else
+          tIcon.text:setColoredText({"Target\n", "white", "OFF", "red"})
+        end
+        lastTargetState = targetState
       end
     end
   end)
