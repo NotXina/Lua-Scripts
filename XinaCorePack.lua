@@ -14,7 +14,7 @@
 --
 --    6. UTILITARIOS      -> Pick-Up Items, Stamina Items, Vende Tudo
 --    7. HUD & INTERFACE  -> Target HUD, Coordenadas no minimapa,
---                           Icones CaveBot / TargetBot
+--                           Icones CaveBot / TargetBot, SDMAX / PARAMAX / AVAMAX
 --
 --  Ficaram de fora somente Trap WG diagonais e o Timer visual de MW
 --  (gastam runa a toa / podem gerar lag). Continuam como scripts avulsos.
@@ -27,8 +27,8 @@
 --  para nao duplicar macros, callbacks, swappers e hotkeys.
 --
 --  EXCECAO: o IconesDashPack.lua PODE ficar ligado junto com este pack.
---  Machete, icones de CaveBot/TargetBot, Dash, Invis, Mount, Utamo e Chase
---  existem nos dois arquivos; eles usam "claimSharedIcon" (ver abaixo) para
+--  Machete, icones de CaveBot/TargetBot, Dash, Invis, Mount, Utamo, Chase e
+--  icones Max existem nos dois arquivos; eles usam "claimSharedIcon" (ver abaixo) para
 --  combinar entre si e garantir que só UM dos dois crie aquele icone/macro/
 --  hotkey, evitando duplicidade e o dobro de timers rodando (= menos lag).
 -- ============================================================================
@@ -67,6 +67,8 @@ local CONFIG = {
   -- Runas e itens
   mwId            = 3180,   -- Magic Wall      (2293 em 7.4/8.0)
   sdId            = 3155,   -- Sudden Death    (2268 em versoes antigas)
+  paraId          = 3165,   -- Paralyze Rune
+  avaId           = 3161,   -- Avalanche Rune
   uhId            = 3160,   -- Ultimate Healing Rune
   destroyFieldId  = 3148,   -- Destroy Field
   disintegrateId  = 3197,   -- Disintegrate (remove flores ao redor)
@@ -188,7 +190,29 @@ macro(100, "Auto SD no alvo", function()
   end
 end)
 
--- 1.3 Fast Paralyze Cure (zero delay) ---------------------------------------
+-- 1.3 Icones de runas Max (compartilhados com o IconesDashPack.lua) ----------
+-- Cada icone liga/desliga o seu proprio macro e usa a criatura atacada como
+-- alvo. A trava evita que os mesmos tres icones sejam criados duas vezes
+-- quando os dois packs estiverem carregados no mesmo perfil.
+local function addMaxRuneIcon(sharedKey, iconName, itemId, text)
+  if not claimSharedIcon(sharedKey) then return end
+
+  local runeMacro = macro(200, function()
+    local target = g_game.getAttackingCreature()
+    if not target then return end
+
+    useWith(itemId, target)
+    delay(200)
+  end)
+
+  addIcon(iconName, {item = {id = itemId, count = 1}, text = text}, runeMacro)
+end
+
+addMaxRuneIcon("sdMax", "XC_SDMax", CONFIG.sdId, "SDMAX")
+addMaxRuneIcon("paraMax", "XC_ParaMax", CONFIG.paraId, "PARAMAX")
+addMaxRuneIcon("avaMax", "XC_AvaMax", CONFIG.avaId, "AVAMAX")
+
+-- 1.4 Fast Paralyze Cure (zero delay) ---------------------------------------
 macro(20, "Fast Paralyze Cure", function()
   if isParalyzed() then
     say(CONFIG.cureSpell)
@@ -196,7 +220,7 @@ macro(20, "Fast Paralyze Cure", function()
   end
 end)
 
--- 1.4 Auto Destroy Field no pe e flores ao redor -----------------------------
+-- 1.5 Auto Destroy Field no pe e flores ao redor -----------------------------
 local DANGEROUS_FIELDS = {
   [2118] = true, [2119] = true, [2120] = true, -- Fire
   [2123] = true, [2124] = true, [2125] = true, -- Poison
@@ -2526,33 +2550,56 @@ end
 section("HUD & Interface")
 
 -- 7.1 Target HUD (nick / hp / distancia) -------------------------------------
+-- O HUD fica no rootWidget (e nao dentro do painel do bot), no topo central da
+-- tela. Ele mostra qualquer criatura atacada, nao apenas jogadores.
 if xcTargetHud then
   xcTargetHud:destroy()
   xcTargetHud = nil
 end
 
 xcTargetHud = setupUI([[
-Label
+Panel
   id: xcTargetHud
-  font: verdana-11px-rounded
-  color: red
-  text-auto-resize: true
+  width: 420
+  height: 24
+  background-color: #101010dd
+  border: 1 #ff5555
   phantom: true
-  text: ""
-]], g_ui.getRootWidget())
-xcTargetHud:setPosition({x = 450, y = 30})
-xcTargetHud:hide()
+  anchors.top: parent.top
+  anchors.horizontalCenter: parent.horizontalCenter
+  margin-top: 35
 
-macro(50, "Target HUD", function()
+  Label
+    id: text
+    anchors.fill: parent
+    font: verdana-11px-rounded
+    color: #ff5555
+    text-align: center
+    text: "TARGET HUD: nenhum alvo"
+]], g_ui.getRootWidget())
+
+local targetHudText = xcTargetHud:getChildById('text')
+xcTargetHud:show()
+xcTargetHud:raise()
+
+macro(100, "Target HUD", function()
   local target = g_game.getAttackingCreature()
-  if target and target:isPlayer() then
-    xcTargetHud:setText(string.format("ALVO: %s | HP: %d%% | DIST: %d",
-      target:getName(), target:getHealthPercent(),
-      getDistanceBetween(pos(), target:getPosition())))
-    xcTargetHud:show()
+  local targetPos = target and target:getPosition()
+  local myPos = pos()
+
+  if target and targetPos and myPos then
+    local hp = math.floor(tonumber(target:getHealthPercent()) or 0)
+    local distance = math.floor(getDistanceBetween(myPos, targetPos) or 0)
+    local targetType = target:isPlayer() and "PLAYER" or "CREATURE"
+
+    targetHudText:setText(string.format("ALVO %s: %s | HP: %d%% | DIST: %d",
+      targetType, target:getName() or "?", hp, distance))
   else
-    xcTargetHud:hide()
+    -- Deixa uma mensagem curta visivel para confirmar que o HUD esta ativo.
+    targetHudText:setText("TARGET HUD: ataque um alvo para ver HP e distancia")
   end
+
+  xcTargetHud:show()
 end)
 
 -- 7.2 Coordenadas no minimapa ------------------------------------------------
@@ -2581,29 +2628,40 @@ end
 
 -- 7.3 Icones CaveBot / TargetBot com indicador ON-OFF ------------------------
 -- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
-if CaveBot and TargetBot and claimSharedIcon("caveTargetIcons") then
-  local cIcon = addIcon("XC_Cave", {text = "Cave\nBot", switchable = false, moveable = true}, function()
-    if CaveBot.isOff() then CaveBot.setOn() else CaveBot.setOff() end
-  end)
-  cIcon:setSize({height = 30, width = 50})
-  cIcon.text:setFont('verdana-11px-rounded')
+if claimSharedIcon("caveTargetIcons") then
+  local cIcon, tIcon
 
-  local tIcon = addIcon("XC_Target", {text = "Target\nBot", switchable = false, moveable = true}, function()
-    if TargetBot.isOff() then TargetBot.setOn() else TargetBot.setOff() end
-  end)
-  tIcon:setSize({height = 30, width = 50})
-  tIcon.text:setFont('verdana-11px-rounded')
+  if CaveBot then
+    cIcon = addIcon("XC_Cave", {text = "Cave\nBot", switchable = false, moveable = true}, function()
+      if CaveBot.isOff() then CaveBot.setOn() else CaveBot.setOff() end
+    end)
+    cIcon:setSize({height = 30, width = 50})
+    cIcon.text:setFont('verdana-11px-rounded')
+  end
+
+  if TargetBot then
+    tIcon = addIcon("XC_Target", {text = "Target\nBot", switchable = false, moveable = true}, function()
+      if TargetBot.isOff() then TargetBot.setOn() else TargetBot.setOff() end
+    end)
+    tIcon:setSize({height = 30, width = 50})
+    tIcon.text:setFont('verdana-11px-rounded')
+  end
 
   macro(300, function()
-    if CaveBot.isOn() then
-      cIcon.text:setColoredText({"CaveBot\n", "white", "ON", "green"})
-    else
-      cIcon.text:setColoredText({"CaveBot\n", "white", "OFF", "red"})
+    if cIcon and CaveBot then
+      if CaveBot.isOn() then
+        cIcon.text:setColoredText({"CaveBot\n", "white", "ON", "green"})
+      else
+        cIcon.text:setColoredText({"CaveBot\n", "white", "OFF", "red"})
+      end
     end
-    if TargetBot.isOn() then
-      tIcon.text:setColoredText({"Target\n", "white", "ON", "green"})
-    else
-      tIcon.text:setColoredText({"Target\n", "white", "OFF", "red"})
+
+    if tIcon and TargetBot then
+      if TargetBot.isOn() then
+        tIcon.text:setColoredText({"Target\n", "white", "ON", "green"})
+      else
+        tIcon.text:setColoredText({"Target\n", "white", "OFF", "red"})
+      end
     end
   end)
 end

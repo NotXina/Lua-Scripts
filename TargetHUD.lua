@@ -9,32 +9,48 @@ if targetHudLabel then
   targetHudLabel = nil
 end
 
--- UI.Label() criava o texto dentro do painel do bot (que usa layout vertical),
--- onde setPosition() é ignorado - o HUD nunca aparecia na tela. O label precisa
--- ser criado no rootWidget, igual ao StatusExpWidget. O setupUI marca o widget
--- como botWidget, então ele é destruído sozinho ao parar/recarregar o bot.
+-- O widget precisa ser criado no rootWidget, e nao dentro do painel do bot.
+-- Assim ele permanece sobre a tela do jogo e continua visivel mesmo quando
+-- ainda nao existe um alvo.
 targetHudLabel = setupUI([[
-Label
+Panel
   id: targetHud
-  font: verdana-11px-rounded
-  color: red
-  text-auto-resize: true
+  width: 420
+  height: 24
+  background-color: #101010dd
+  border: 1 #ff5555
   phantom: true
-  text: ""
+  anchors.top: parent.top
+  anchors.horizontalCenter: parent.horizontalCenter
+  margin-top: 35
+
+  Label
+    id: text
+    anchors.fill: parent
+    font: verdana-11px-rounded
+    color: #ff5555
+    text-align: center
+    text: "TARGET HUD: nenhum alvo"
 ]], g_ui.getRootWidget())
 
-local targetLabel = targetHudLabel
-targetLabel:setPosition({x = 450, y = 30})
-targetLabel:hide()
+local targetLabel = targetHudLabel:getChildById('text')
+targetHudLabel:show()
+targetHudLabel:raise()
 
-macro(50, "Target HUD", function()
+macro(100, "Target HUD", function()
   local target = g_game.getAttackingCreature()
-  if target and target:isPlayer() then
-    local hp = target:getHealthPercent()
-    local dist = getDistanceBetween(pos(), target:getPosition())
-    targetLabel:setText(string.format("ALVO: %s | HP: %d%% | DIST: %d", target:getName(), hp, dist))
-    targetLabel:show()
+  local targetPos = target and target:getPosition()
+  local myPos = pos()
+
+  if target and targetPos and myPos then
+    local hp = math.floor(tonumber(target:getHealthPercent()) or 0)
+    local dist = math.floor(getDistanceBetween(myPos, targetPos) or 0)
+    local targetType = target:isPlayer() and "PLAYER" or "CREATURE"
+    targetLabel:setText(string.format("ALVO %s: %s | HP: %d%% | DIST: %d",
+      targetType, target:getName() or "?", hp, dist))
   else
-    targetLabel:hide()
+    targetLabel:setText("TARGET HUD: ataque um alvo para ver HP e distancia")
   end
+
+  targetHudLabel:show()
 end)

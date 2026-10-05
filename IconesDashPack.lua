@@ -3,8 +3,8 @@
 -- Tested on OTCv8 3.2 / vBot 4.8
 -- ----------------------------------------------------------------------------
 -- COMPATÍVEL COM XinaCorePack.lua:
--- Machete, ícones de CaveBot/TargetBot, Dash, Invis, Mount, Utamo e Chase
--- também existem dentro do XinaCorePack.lua (secoes 2, 3, 5 e 7). Os dois
+-- Machete, ícones de CaveBot/TargetBot, Dash, Invis, Mount, Utamo, Chase e
+-- SDMAX/PARAMAX/AVAMAX também existem dentro do XinaCorePack.lua (secoes 2, 3, 5 e 7). Os dois
 -- arquivos podem ficar ligados ao mesmo tempo no mesmo perfil: cada módulo
 -- usa "claimSharedIcon" (ver abaixo) para garantir que só UM dos dois
 -- scripts crie aquele ícone/macro/hotkey. Isso evita ícone duplicado na
@@ -205,28 +205,23 @@ if claimSharedIcon("chase") then
   end))
 end
 
--- SD Max, Paralyze Max e Avalanche Max: exclusivos deste pack (não existem
--- no XinaCorePack.lua), então não precisam de trava com ele.
-addIcon("SDicon", {item = {id = 3155, count = 1}, text = "SDMAX"}, macro(200, function()
-  local target = g_game.getAttackingCreature()
-  if target then
-    useWith(3155, target)
-    delay(200)
-  end
-end))
+-- SD Max, Paralyze Max e Avalanche Max: tambem existem no XinaCorePack.lua.
+-- A mesma trava compartilhada impede icones duplicados quando os dois packs
+-- estiverem ligados no mesmo perfil.
+local function addMaxRuneIcon(sharedKey, iconName, itemId, text)
+  if not claimSharedIcon(sharedKey) then return end
 
-addIcon("Paraicon", {item = {id = 3165, count = 1}, text = "PARAMAX"}, macro(200, function()
-  local target = g_game.getAttackingCreature()
-  if target then
-    useWith(3165, target)
-    delay(200)
-  end
-end))
+  local runeMacro = macro(200, function()
+    local target = g_game.getAttackingCreature()
+    if not target then return end
 
-addIcon("avaicon", {item = {id = 3161, count = 1}, text = "AVAMAX"}, macro(200, function()
-  local target = g_game.getAttackingCreature()
-  if target then
-    useWith(3161, target)
+    useWith(itemId, target)
     delay(200)
-  end
-end))
+  end)
+
+  addIcon(iconName, {item = {id = itemId, count = 1}, text = text}, runeMacro)
+end
+
+addMaxRuneIcon("sdMax", "SDicon", 3155, "SDMAX")
+addMaxRuneIcon("paraMax", "Paraicon", 3165, "PARAMAX")
+addMaxRuneIcon("avaMax", "avaicon", 3161, "AVAMAX")
