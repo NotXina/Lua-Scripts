@@ -9,8 +9,9 @@ local config = {
   -- IDs das Runas
   mwId = 3180,           -- Magic Wall
   wgId = 3156,           -- Wild Growth
-  sdId = 3155,           -- Sudden Death (SD)
-  destroyFieldId = 3148, -- Destroy Field
+  sdId = 3155,             -- Sudden Death (SD)
+  destroyFieldId = 3148,   -- Destroy Field
+  disintegrateId = 3197,   -- Disintegrate (remove flores ao redor)
 
   -- IDs de Equipamentos de Defesa
   ssaId = 3081,          -- Stone Skin Amulet
@@ -39,6 +40,17 @@ local dangerousFields = {
   [2118] = true, [2119] = true, [2120] = true, -- Fire field
   [2123] = true, [2124] = true, [2125] = true, -- Poison field
   [2126] = true, [2127] = true  -- Energy field
+}
+
+-- Flores removidas com Disintegrate nos 8 tiles ao redor
+local flowerIds = {
+  [2981] = true, [2983] = true, [2984] = true, [2985] = true
+}
+
+local around = {
+  {-1, -1}, {0, -1}, {1, -1},
+  {-1,  0},          {1,  0},
+  {-1,  1}, {0,  1}, {1,  1}
 }
 
 -- IDs de Magic Wall no chão
@@ -95,19 +107,41 @@ macro(100, "Anti-Push", function()
 end)
 
 -- ============================================================================
--- 3. 💥 AUTO DESTROY FIELD NO PÉ
+-- 3. 💥 AUTO DESTROY FIELD NO PÉ E FLORES AO REDOR
 -- ============================================================================
 macro(150, "Auto Destroy Field", function()
   local p = g_game.getLocalPlayer()
   if not p then return end
-  local tile = g_map.getTile(p:getPosition())
+
+  local pPos = p:getPosition()
+  local tile = g_map.getTile(pPos)
   if not tile then return end
 
+  -- Destroy Field embaixo do personagem tem prioridade.
   for _, item in ipairs(tile:getItems() or {}) do
     if dangerousFields[item:getId()] then
       useWith(config.destroyFieldId, item)
       delay(300)
       return
+    end
+  end
+
+  -- Disintegrate em uma flor por vez nos 8 tiles ao redor.
+  for _, offset in ipairs(around) do
+    local flowerTile = g_map.getTile({
+      x = pPos.x + offset[1],
+      y = pPos.y + offset[2],
+      z = pPos.z
+    })
+
+    if flowerTile then
+      for _, item in ipairs(flowerTile:getItems() or {}) do
+        if flowerIds[item:getId()] then
+          useWith(config.disintegrateId, item)
+          delay(300)
+          return
+        end
+      end
     end
   end
 end)

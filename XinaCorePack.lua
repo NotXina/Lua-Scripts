@@ -33,6 +33,7 @@ local CONFIG = {
   sdId            = 3155,   -- Sudden Death    (2268 em versoes antigas)
   uhId            = 3160,   -- Ultimate Healing Rune
   destroyFieldId  = 3148,   -- Destroy Field
+  disintegrateId  = 3197,   -- Disintegrate (remove flores ao redor)
   macheteId       = 3308,   -- Machete / Tramontina
   energyRingId    = 3051,   -- Energy Ring
   trashId         = 3031,   -- Anti-Push: 3031 = Gold | 3035 = Platinum
@@ -163,7 +164,7 @@ macro(20, "Fast Paralyze Cure", function()
   end
 end)
 
--- 1.4 Auto Destroy Field no pe ----------------------------------------------
+-- 1.4 Auto Destroy Field no pe e flores ao redor -----------------------------
 local DANGEROUS_FIELDS = {
   [2118] = true, [2119] = true, [2120] = true, -- Fire
   [2123] = true, [2124] = true, [2125] = true, -- Poison
@@ -171,13 +172,30 @@ local DANGEROUS_FIELDS = {
 }
 
 macro(150, "Auto Destroy Field", function()
-  local tile = g_map.getTile(pos())
+  local pPos = pos()
+  local tile = g_map.getTile(pPos)
   if not tile then return end
+
+  -- Destroy Field embaixo do personagem tem prioridade.
   for _, item in ipairs(tile:getItems() or {}) do
     if DANGEROUS_FIELDS[item:getId()] then
       useWith(CONFIG.destroyFieldId, item)
       delay(300)
       return
+    end
+  end
+
+  -- Disintegrate em uma flor por vez nos 8 tiles ao redor.
+  for _, off in ipairs(AROUND) do
+    local flowerTile = tileAt(pPos, off[1], off[2])
+    if flowerTile then
+      for _, item in ipairs(flowerTile:getItems() or {}) do
+        if table.find(CONFIG.flowerIds, item:getId()) then
+          useWith(CONFIG.disintegrateId, item)
+          delay(300)
+          return
+        end
+      end
     end
   end
 end)
