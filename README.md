@@ -40,6 +40,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
+| **XinaCorePack.lua** | ⭐ Pack organizado que reúne **21 módulos avulsos** deste repositório em um só arquivo, com aba própria (`Xina Core`) dividida em 6 seções: Combate, Trap/MW/WG, Cura & Suporte, Equipamentos, Movimentação & Push e HUD & Interface. Todos os IDs, limiares e hotkeys ficam numa única tabela `CONFIG` no topo. Todos os módulos iniciam desligados. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (só solta a área quando não acerta amigo), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
