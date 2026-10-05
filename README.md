@@ -40,7 +40,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina Core`) em 7 seções. Inclui combate e combo (Attack Players, Auto SD, Safe SD/UE, Combo Attack por míssil, ocultar efeitos), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Emergency Ring**, **Smart Ring** e Energy Ring), movimentação e **PushMax pelo scroll**, utilitários (**Pick-Up Items**, **Stamina Items**, **Vende Tudo**) e HUD. Controles e botões Setup ficam em linhas separadas; tudo inicia desligado. |
+| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina Core`) em 7 seções. Inclui combate e combo (Attack Players, Auto SD, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido** e Smart Energy Ring), movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Vende Tudo**) e HUD. Controles e botões Setup ficam em linhas separadas; tudo inicia desligado. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (só solta a área quando não acerta amigo), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
@@ -94,9 +94,9 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | Script | Descrição |
 |---|---|
 | **SsaMightSwapper.lua** | Troca automaticamente para Stone Skin Amulet e Might Ring quando o HP cai abaixo do limite configurado. Com janela de setup. |
-| **SmartRingSwapper.lua** | Swapper de anéis com lógica invertida (equipa/desequipa conforme a situação). Com janela de setup. |
-| **SmartEnergyRing.lua** | Equipa o Energy Ring em emergência e desequipa ao recuperar a vida. |
-| **EmergencyEnergyRing.lua** | Versão avançada do Energy Ring de emergência, com janela de setup para HP, IDs e condições. |
+| **SmartRingSwapper.lua** | **Ring Invertido**: swapper de anéis com lógica invertida. Com janela de setup. |
+| **SmartEnergyRing.lua** | **Energy Ring**: equipa o anel em emergência e desequipa ao recuperar a vida. |
+| **EmergencyEnergyRing.lua** | **Energy Ring** avançado, com janela de setup para HP, IDs e condições. |
 
 ---
 
@@ -136,6 +136,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | **StatusExpWidget.lua** | Widget compacto e arrastável com status e experiência, salvando a posição na tela entre sessões. |
 | **MinimapCoords.lua** | Exibe as coordenadas X, Y e Z no canto inferior do minimapa. |
 | **CaveBotTargetBotIcons.lua** | Ícones arrastáveis para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). |
+| **TelaLimpa.lua** | Botão para ocultar textos laranjas, efeitos de magias, danos animados, mensagens do sistema e mísseis. Mensagens que contenham `says:` são preservadas. |
 
 ---
 
@@ -152,7 +153,6 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | `NumPad0` | Dash / Bug Map | BugMapDash, IconesDashPack, XinaPackNew, XinaCorePack |
 | `NumPad5` | Trapa em si com Magic Wall | TrapEmSiMw, WarPwPack, XinaCorePack |
 | `NumPad1`–`NumPad9` | Empurrar alvo nas 9 direções | PushMaxIcons |
-| `Scroll Down` | PushMax pelo mouse | PushMaxMouse, XinaCorePack |
 
 ---
 
