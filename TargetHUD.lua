@@ -33,7 +33,7 @@ Panel
     text: "TARGET HUD: nenhum alvo"
 ]], g_ui.getRootWidget())
 
-local targetLabel = targetHudLabel.text
+local targetLabel = targetHudLabel:getChildById('text')
 targetHudLabel:show()
 targetHudLabel:raise()
 

@@ -2578,7 +2578,7 @@ Panel
     text: "TARGET HUD: nenhum alvo"
 ]], g_ui.getRootWidget())
 
-local targetHudText = xcTargetHud.text
+local targetHudText = xcTargetHud:getChildById('text')
 xcTargetHud:show()
 xcTargetHud:raise()
 
