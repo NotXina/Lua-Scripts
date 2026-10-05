@@ -366,10 +366,6 @@ onTextMessage(function(mode, text)
   end
 end)
 
-onMissile(function(missile)
-  if telaLimpa:isOff() then return end
-  missile:hide()
-end)
 
 -- 1.7 Combo Attack por missil -------------------------------------------------
 do
