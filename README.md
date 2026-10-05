@@ -44,7 +44,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (só solta a área quando não acerta amigo), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
-| **IconesDashPack.lua** | Pack de ícones e deslocamento: Machete/Tramontina no Wild Growth, ícones ON/OFF de CaveBot e TargetBot, Dash (bug map / map click), invisibilidade, auto mount, Utamo Vita com renovação inteligente, Auto Chase e ícones de SD Max, Paralyze Max e Avalanche Max. |
+| **IconesDashPack.lua** | Pack de ícones e deslocamento: Machete/Tramontina no Wild Growth, ícones ON/OFF de CaveBot e TargetBot, Dash (bug map / map click), invisibilidade, auto mount, Utamo Vita com renovação inteligente, Auto Chase e ícones de SD Max, Paralyze Max e Avalanche Max. ✅ Pode ficar ligado **junto com o XinaCorePack.lua** (ver observação abaixo) sem duplicar ícones, macros ou hotkeys. |
 | **XinaPackNew.lua** | Pack geral "+Xina" com aba própria: painel de runas, PvP de Paladin, ícones de CaveBot/TargetBot, Bug Map (DASH), ataque no alvo do líder, MW Step (`F12`), MW Target Step (`F11`), trap de MW no alvo, anti-push, potar amigo e Attack All (`Delete`). |
 
 ---
@@ -165,4 +165,12 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 - Vários scripts usam o mesmo módulo (ex.: `MWSelfStep` também existe dentro de
   `PvPUltimatePack`). Evite carregar o script avulso e o pack ao mesmo tempo para não
   duplicar macros e hotkeys.
+- **Exceção:** `IconesDashPack.lua` e `XinaCorePack.lua` foram feitos para funcionar
+  ligados ao mesmo tempo. Os dois compartilham os módulos de Machete, ícones de
+  CaveBot/TargetBot, Dash, Invis, Mount, Utamo e Chase através de uma trava global
+  (`xinaSharedIcons` / `claimSharedIcon`): o primeiro script a carregar cria o
+  ícone/macro/hotkey daquele módulo, e o outro detecta e pula a criação — evitando
+  ícone duplicado na tela, hotkey duplicada (ex.: `F1` e `NumPad0`) e o dobro de
+  timers rodando ao mesmo tempo (menos lag). Não importa a ordem em que os dois são
+  carregados.
 - Use por sua conta e risco: automação pode violar as regras do servidor em que você joga.
