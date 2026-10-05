@@ -246,8 +246,11 @@ macro(50, "Visual MW Timer", function()
   local pPos = pos()
   local t = now or g_clock.millis()
 
-  for _, tile in ipairs(g_map.getTiles(pPos.z)) do
-    local posKey = tile:getPosition().x .. "," .. tile:getPosition().y
+  for _, tile in ipairs(g_map.getTiles(pPos.z) or {}) do
+    -- A chave precisa incluir o andar (z). Sem ele, as walls de andares
+    -- diferentes compartilham o mesmo timer e a contagem sai errada.
+    local tPos = tile:getPosition()
+    local posKey = tPos.x .. "," .. tPos.y .. "," .. tPos.z
     local hasMw = false
     
     for _, it in ipairs(tile:getItems() or {}) do
@@ -275,10 +278,28 @@ end)
 -- ============================================================
 -- 12. 📊 INIMIGO TARGET HUD
 -- ============================================================
-local targetLabel = UI.Label()
+-- UI.Label() criava o texto dentro do painel do bot (que usa layout vertical),
+-- onde setPosition() é ignorado - o HUD nunca aparecia na tela. O label precisa
+-- ser criado no rootWidget. O setupUI marca o widget como botWidget, então ele
+-- é destruído sozinho ao parar/recarregar o bot.
+if targetHudLabel then
+  targetHudLabel:destroy()
+  targetHudLabel = nil
+end
+
+targetHudLabel = setupUI([[
+Label
+  id: targetHud
+  font: verdana-11px-rounded
+  color: red
+  text-auto-resize: true
+  phantom: true
+  text: ""
+]], g_ui.getRootWidget())
+
+local targetLabel = targetHudLabel
 targetLabel:setPosition({x = 450, y = 30})
-targetLabel:setFont("verdana-11px-rounded")
-targetLabel:setColor("red")
+targetLabel:hide()
 
 macro(50, "Target HUD", function()
   local target = g_game.getAttackingCreature()

@@ -14,24 +14,27 @@ addSeparator()
 ItemsToSellContainer:setHeight(90)
 ItemsToSellContainer:setItems(storage.ItemsToSell)
 
+-- Monta um mapa id -> true para busca O(1).
 local getContainerItemsIds = function(data)
   local idsTable = {}
-  local data = data or {}
-  for _, item in ipairs(data) do
-    if type(item) ~= "number" then
-      table.insert(idsTable, item.id)
-    elseif type(item) == "number" then
-      table.insert(idsTable, item)
+  for _, item in ipairs(data or {}) do
+    local id = type(item) == "number" and item or item.id
+    if type(id) == "number" and id > 0 then
+      idsTable[id] = true
     end
   end
   return idsTable
 end
 
 local sellMacro = macro(50, function()
+  -- A lista era reconstruída para CADA item de CADA container, a cada 50ms
+  -- (dezenas de tabelas novas por tick). Agora é montada uma vez por execução.
+  local sellIds = getContainerItemsIds(storage.ItemsToSell)
+
   local containers = getContainers()
   for i, container in pairs(containers) do
     for j, item in ipairs(container:getItems()) do
-      if table.find(getContainerItemsIds(storage.ItemsToSell), item:getId()) then
+      if sellIds[item:getId()] then
         useWith(sellWand, item)
         return delay(250)
       end

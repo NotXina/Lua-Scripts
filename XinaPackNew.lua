@@ -156,13 +156,13 @@ end
 
 
 bugMap = macro(1, function() 
- if modules.corelib.g_keyboard.isKeyPressed('Up') or modules.corelib.g_keyboard.isKeyPressed('w')  then
+ if g_keyboard.isKeyPressed('Up') or g_keyboard.isKeyPressed('w')  then
   checkPos(0, -5)
- elseif modules.corelib.g_keyboard.isKeyPressed('Right') or modules.corelib.g_keyboard.isKeyPressed('d') then
+ elseif g_keyboard.isKeyPressed('Right') or g_keyboard.isKeyPressed('d') then
   checkPos(5, 0)
- elseif modules.corelib.g_keyboard.isKeyPressed('Down') or modules.corelib.g_keyboard.isKeyPressed('s') then
+ elseif g_keyboard.isKeyPressed('Down') or g_keyboard.isKeyPressed('s') then
   checkPos(0, 5)
- elseif modules.corelib.g_keyboard.isKeyPressed('Left') or modules.corelib.g_keyboard.isKeyPressed('a') then
+ elseif g_keyboard.isKeyPressed('Left') or g_keyboard.isKeyPressed('a') then
   checkPos(-5, 0)
  end
  end)

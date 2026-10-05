@@ -91,7 +91,9 @@ local function checkPos(offX, offY)
 end
 
 local bugMap = macro(25, function()
-  local kb = modules.corelib.g_keyboard
+  -- g_keyboard é global do OTClientV8 (corelib/keyboard.lua) e já é exposto
+  -- no contexto do bot. "modules.corelib.g_keyboard" é nil e quebra o macro.
+  local kb = g_keyboard
   if kb.isKeyPressed('Up') or kb.isKeyPressed('w') then
     checkPos(0, -5)
   elseif kb.isKeyPressed('Right') or kb.isKeyPressed('d') then

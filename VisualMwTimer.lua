@@ -16,7 +16,10 @@ macro(50, "Visual MW Timer", function()
   local t = now or g_clock.millis()
 
   for _, tile in ipairs(g_map.getTiles(pPos.z) or {}) do
-    local posKey = tile:getPosition().x .. "," .. tile:getPosition().y
+    -- A chave precisa incluir o andar (z). Sem ele, as walls de andares
+    -- diferentes compartilham o mesmo timer e a contagem sai errada.
+    local tPos = tile:getPosition()
+    local posKey = tPos.x .. "," .. tPos.y .. "," .. tPos.z
     local hasMw = false
     
     for _, it in ipairs(tile:getItems() or {}) do
