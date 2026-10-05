@@ -2188,20 +2188,30 @@ local function handleScrollTrigger()
   end
 end
 
-onMouseWheel(function(mousePos, direction)
-  if direction == MouseWheelDown or direction == 2 or direction == 1 or direction == "down" then
-    handleScrollTrigger()
-  end
-end)
+-- Nem todas as versões do OTCv8 expõem onMouseWheel como callback global.
+-- O fallback por teclado continua funcionando nesses clientes.
+if type(onMouseWheel) == "function" then
+  onMouseWheel(function(mousePos, direction)
+    if direction == MouseWheelDown or direction == 2 or direction == 1 or direction == "down" then
+      handleScrollTrigger()
+    end
+  end)
+end
 
-onKeyDown(function(keys)
+if type(onKeyDown) == "function" then
+  onKeyDown(function(keys)
   local k = keys:lower()
+  if k == "escape" or k == "esc" then
+    resetData()
+    return
+  end
   if k == "mousewheeldown" or k == "wheeldown" then
     handleScrollTrigger()
   end
-end)
+  end)
+end
 
-onCreaturePositionChange(function(creature, newPos, oldPos)
+  onCreaturePositionChange(function(creature, newPos, oldPos)
   if not config.enabled or not creature then return end
 
   if creature:isLocalPlayer() then
