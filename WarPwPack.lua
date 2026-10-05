@@ -233,6 +233,12 @@ end)
 storage.ComboAttack = storage.ComboAttack or {}
 local comboSettings = storage.ComboAttack
 
+-- Os nomes só eram gravados no storage quando o campo era editado. Sem isso,
+-- comboSettings.LeaderName era nil e o onMissle quebrava em LeaderName:lower().
+comboSettings.LeaderName = comboSettings.LeaderName or "Leader1"
+comboSettings.LeaderName2 = comboSettings.LeaderName2 or "Leader2"
+comboSettings.LeaderName3 = comboSettings.LeaderName3 or "Leader3"
+
 addLabel("", "Líder 1:")
 addTextEdit("TxtEditLeader1", comboSettings.LeaderName or "Leader1", function(widget, text)
   comboSettings.LeaderName = text
@@ -266,11 +272,13 @@ onMissle(function(missle)
   local shooter = fromCreatures[1]
   local target = toCreatures[1]
 
-  local leaders = {
-    comboSettings.LeaderName:lower(),
-    comboSettings.LeaderName2:lower(),
-    comboSettings.LeaderName3:lower()
-  }
+  local leaders = {}
+  for _, leaderName in ipairs({comboSettings.LeaderName, comboSettings.LeaderName2, comboSettings.LeaderName3}) do
+    if type(leaderName) == "string" and leaderName:match("%S") then
+      table.insert(leaders, leaderName:lower())
+    end
+  end
+  if #leaders == 0 then return end
 
   if table.find(leaders, shooter:getName():lower()) then
     local current = g_game.getAttackingCreature()
