@@ -125,6 +125,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | **Seller.lua** | Vende itens de uma lista usando a Sell Wand, com container editável para escolher os itens. |
 | **VendeTudo.lua** | Versão otimizada do seller, com busca em tabela hash O(1) e janela de setup — vende listas grandes sem travar o client. |
 | **StaminaItems.lua** | Usa itens de regeneração de stamina automaticamente dentro de uma faixa configurável (ex.: entre 0 e 40 horas). |
+| **AutoUseItems.lua** | Usa, em ordem, todos os itens configurados nos 15 slots e repete o ciclo a cada intervalo de 1 a 60 minutos. Com janela de setup. |
 
 ---
 
