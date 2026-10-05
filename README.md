@@ -40,7 +40,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack enxuto e organizado para uso em jogo, com aba própria (`Xina Core`) em 6 seções: Attack Players (menor HP), Auto SD no alvo, Fast Paralyze Cure, Auto Destroy Field com Disintegrate nas flores ao redor, MW Self Step, Trapa em si com MW, Machete no WG, UH No Time, Renew Utamo Vita, Smart Energy Ring, Auto Chase, Auto Mount, Auto Invis, Bug Map Dash, Anti-Push com moedas, Flores ao redor, Target HUD, coordenadas no minimapa e ícones CaveBot/TargetBot. IDs, limiares e hotkeys numa única tabela `CONFIG` no topo; tudo inicia desligado. |
+| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina Core`) em 7 seções. Inclui combate e combo (Attack Players, Auto SD, Safe SD/UE, Combo Attack por míssil, ocultar efeitos), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Emergency Ring**, **Smart Ring** e Energy Ring), movimentação e **PushMax pelo scroll**, utilitários (**Pick-Up Items**, **Stamina Items**, **Vende Tudo**) e HUD. Controles e botões Setup ficam em linhas separadas; tudo inicia desligado. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (só solta a área quando não acerta amigo), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
@@ -143,16 +143,16 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Tecla | Ação | Script |
 |---|---|---|
-| `Delete` | Attack Players / Attack All | AttackPlayersLowestHp, WarPwPack, XinaPackNew |
-| `F1` | Machete no Wild Growth | MacheteWg, IconesDashPack |
-| `F3` / `F4` | Marcar posição de MW / WG | FastForceHoldMwWg |
+| `Delete` | Attack Players / Attack All | AttackPlayersLowestHp, WarPwPack, XinaPackNew, XinaCorePack |
+| `F1` | Machete no Wild Growth | MacheteWg, IconesDashPack, XinaCorePack |
+| `F3` / `F4` | Marcar posição de MW / WG | FastForceHoldMwWg, XinaCorePack |
 | `F7` | Marcar/desmarcar SQM protegido por flores | ProtegerSqmFlores, WarPwPack |
 | `F11` | MW no SQM do alvo | XinaPackNew |
 | `F12` | MW no SQM anterior (Mwall Step) | XinaPackNew |
-| `NumPad0` | Dash / Bug Map | BugMapDash, IconesDashPack, XinaPackNew |
-| `NumPad5` | Trapa em si com Magic Wall | TrapEmSiMw, WarPwPack |
+| `NumPad0` | Dash / Bug Map | BugMapDash, IconesDashPack, XinaPackNew, XinaCorePack |
+| `NumPad5` | Trapa em si com Magic Wall | TrapEmSiMw, WarPwPack, XinaCorePack |
 | `NumPad1`–`NumPad9` | Empurrar alvo nas 9 direções | PushMaxIcons |
-| `Scroll Down` | PushMax pelo mouse | PushMaxMouse |
+| `Scroll Down` | PushMax pelo mouse | PushMaxMouse, XinaCorePack |
 
 ---
 
