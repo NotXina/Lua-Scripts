@@ -48,14 +48,16 @@ Uso rápido das versões com Guild Chat:
    altere `$cl_runeid` caso queira outra runa; o padrão é `14648`.
 2. Cole as linhas em **Hotkeys → Persistent** nos personagens seguidores.
 3. Coloque todos os personagens na mesma guild e abra o canal **SABOR NESCAU**.
-4. No líder, use uma hotkey no momento do disparo:
-   `guildsay 'combo $target.name'`
+4. No líder, use uma hotkey no momento do disparo para enviar somente um ponto e o
+   nome do alvo:
+   `guildsay '.$target.name'`
 5. Não use as duas versões simultaneamente no mesmo personagem, para não disparar SD
    e magia juntos. Nenhuma das duas versões possui UE.
 
-O combo verifica `$cl_msg.isguild` e `$cl_msg.channel == 'SABOR NESCAU'`, ignorando
-mensagens de outros canais. A resposta Spell usa `say`, pois é o comando que lança a
-magia no jogo.
+O combo aceita mensagens no formato `.NomeDoTarget`, verifica `$cl_msg.isguild` e
+`$cl_msg.channel == 'SABOR NESCAU'`, e usa o texto depois do ponto como alvo. Mensagens
+de outros canais são ignoradas. A resposta Spell usa `say`, pois é o comando que
+lança a magia no jogo.
 
 #### Modo sem chat
 
