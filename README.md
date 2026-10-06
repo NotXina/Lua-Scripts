@@ -39,30 +39,27 @@ exato no Guild Chat **`SABOR NESCAU`**:
 
 | Arquivo | Ação do combo |
 |---|---|
-| **`ElfbotComboLeaderSD.txt`** | Ataca o alvo recebido e usa `sd target`. |
-| **`ElfbotComboLeaderSpell.txt`** | Ataca o alvo recebido e fala a magia configurada em `$cl_spell`. |
+| **`ElfbotComboLeaderSD.txt`** | Ataca o alvo recebido e usa a SD `3155`. |
+| **`ElfbotComboLeaderSpell.txt`** | Ataca o alvo recebido e usa `exori gran con`. |
 
-Uso rápido:
+Uso rápido das versões com Guild Chat:
 
-1. Abra a versão desejada e altere `Leader1`, `Leader2`, `Leader3` e as magias de UE.
-   Na versão Spell, altere também `$cl_spell`.
-2. Cole as três linhas em **Hotkeys → Persistent** nos personagens seguidores.
+1. Abra a versão desejada e altere `Leader1`, `Leader2` e `Leader3`.
+2. Cole as linhas em **Hotkeys → Persistent** nos personagens seguidores.
 3. Coloque todos os personagens na mesma guild e abra o canal **SABOR NESCAU**.
 4. No líder, use uma hotkey no momento do disparo:
    `guildsay 'combo $target.name'`
-5. A mensagem de gatilho da UE também deve ser enviada no canal **SABOR NESCAU**.
-   O script verifica `$cl_ue_msg.isguild` e `$cl_ue_msg.channel == 'SABOR NESCAU'`.
-6. Não use as duas versões simultaneamente no mesmo personagem, para não disparar SD
-   e magia juntos.
+5. Não use as duas versões simultaneamente no mesmo personagem, para não disparar SD
+   e magia juntos. Nenhuma das duas versões possui UE.
 
 O combo verifica `$cl_msg.isguild` e `$cl_msg.channel == 'SABOR NESCAU'`, ignorando
-mensagens de outros canais. A resposta continua usando `say`, pois é o comando que
-lança a magia no jogo.
+mensagens de outros canais. A resposta Spell usa `say`, pois é o comando que lança a
+magia no jogo.
 
 #### Modo sem chat
 
-É possível fazer o combo sem `guildsay` e sem carregar os arquivos `.txt` usando o
-**Aimbot nativo** do ElfBot. Configure nos três personagens:
+Também é possível fazer o combo sem `guildsay` e sem carregar os arquivos `.txt` usando
+o **Aimbot nativo** do ElfBot. Configure nos personagens seguidores:
 
 - **Aim Leaders:** `Leader1,Leader2,Leader3`
 - **Lock on leader's target:** ligado
@@ -70,15 +67,16 @@ lança a magia no jogo.
 - **Trace shots:** ligado
 - **Execute automatically:** ligado
 - **Word triggering enabled:** desligado
-- **Aim Type:** `Attack + SD Rune` para a versão SD
-- **Aim Type:** `Attack +` a magia desejada para a versão Spell, se ela aparecer na
-  lista de ataques do seu ElfBot
+- Versão SD: **Aim Type → Attack + SD Rune**, usando o ID `3155` quando o cliente
+  permitir informar o ID da runa.
+- Versão Spell: **Aim Type → Attack + Exori Gran Con**, se essa magia aparecer na
+  lista de ataques do seu ElfBot.
 
 Nesse modo o ElfBot usa o disparo de SD do líder como gatilho e o canal **SABOR
-NESCAU** não é utilizado. Se a magia desejada não existir no **Aim Type**, ou se o
-gatilho precisar ser uma magia do líder em vez de um disparo de SD, a versão padrão
-do ElfBot não oferece um evento de míssil para hotkeys personalizadas; nesse caso é
-necessário usar Guild Chat/Navigation ou um plugin/build com suporte a esse evento.
+NESCAU** não é utilizado. Se `Exori Gran Con` não existir no **Aim Type**, a versão
+padrão do ElfBot não oferece um evento de míssil para uma hotkey personalizada; nesse
+caso, para usar essa magia sincronizada, é necessário o Guild Chat/Navigation ou um
+plugin/build com suporte a esse evento.
 
 ---
 
