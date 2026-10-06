@@ -57,9 +57,28 @@ Uso rápido:
 
 O combo verifica `$cl_msg.isguild` e `$cl_msg.channel == 'SABOR NESCAU'`, ignorando
 mensagens de outros canais. A resposta continua usando `say`, pois é o comando que
-lança a magia no jogo. As hotkeys do ElfBot não possuem um callback `onMissile`
-equivalente ao `onMissle` do vBot; para SD disparado diretamente pelo míssil, o
-Aimbot nativo do ElfBot continua sendo a alternativa mais precisa.
+lança a magia no jogo.
+
+#### Modo sem chat
+
+É possível fazer o combo sem `guildsay` e sem carregar os arquivos `.txt` usando o
+**Aimbot nativo** do ElfBot. Configure nos três personagens:
+
+- **Aim Leaders:** `Leader1,Leader2,Leader3`
+- **Lock on leader's target:** ligado
+- **Auto combo paralyze/leader target:** ligado
+- **Trace shots:** ligado
+- **Execute automatically:** ligado
+- **Word triggering enabled:** desligado
+- **Aim Type:** `Attack + SD Rune` para a versão SD
+- **Aim Type:** `Attack +` a magia desejada para a versão Spell, se ela aparecer na
+  lista de ataques do seu ElfBot
+
+Nesse modo o ElfBot usa o disparo de SD do líder como gatilho e o canal **SABOR
+NESCAU** não é utilizado. Se a magia desejada não existir no **Aim Type**, ou se o
+gatilho precisar ser uma magia do líder em vez de um disparo de SD, a versão padrão
+do ElfBot não oferece um evento de míssil para hotkeys personalizadas; nesse caso é
+necessário usar Guild Chat/Navigation ou um plugin/build com suporte a esse evento.
 
 ---
 
