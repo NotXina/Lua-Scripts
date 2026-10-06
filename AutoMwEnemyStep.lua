@@ -9,6 +9,11 @@ storage.mwEnemyStep = storage.mwEnemyStep or {
 }
 local config = storage.mwEnemyStep
 
+-- Alcance maximo (SQMs) para jogar a MW no SQM que o inimigo deixou.
+-- Mantenha baixo: com a runa longe demais o server OBRIGA o personagem a
+-- andar ate o SQM antes de usar. Com 3 o char nunca sai do lugar.
+local MAX_DISTANCE = 3
+
 if mwStepWindow then mwStepWindow:destroy() end
 
 g_ui.loadUIFromString([[
@@ -116,7 +121,8 @@ onCreaturePositionChange(function(creature, newPos, oldPos)
     if not localPlayer then return end
     local myPosition = localPlayer:getPosition()
 
-    if oldPos and oldPos.z == myPosition.z and getDistanceBetween(myPosition, oldPos) <= 7 then
+    if oldPos and oldPos.z == myPosition.z
+      and getDistanceBetween(myPosition, oldPos) <= MAX_DISTANCE then
       local tile = g_map.getTile(oldPos)
       if tile and tile:isWalkable() then
         local target = tile:getTopUseThing() or tile:getGround()
