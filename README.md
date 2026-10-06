@@ -40,7 +40,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina Core`) em 7 seções. Inclui combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido** e Smart Energy Ring), movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Auto Use Items**, **Vende Tudo**) e HUD. Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. |
+| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina`) em 7 seções. Inclui combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**), movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Auto Use Items**, **Vende Tudo**) e HUD. Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (mantém a área e só troca para SD quando um jogador próximo tem shield diferente do seu), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
@@ -145,7 +145,7 @@ O Target HUD aparece no topo central da tela. Ele começa mostrando `TARGET HUD:
 para confirmar que está carregado e, ao atacar uma criatura, passa a mostrar nome, tipo, HP e
 distância. Ele acompanha o alvo retornado pelo ataque atual (`g_game.getAttackingCreature()`),
 portanto não mostra informações de uma criatura apenas por passar o mouse sobre ela. No painel
-`Xina Core`, deixe a macro **Target HUD** ligada.
+`Xina`, deixe a macro **Target HUD** ligada.
 
 ---
 

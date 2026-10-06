@@ -2,14 +2,14 @@
 --                       XINA CORE PACK  -  OTCv8 3.2 / vBot 4.8
 -- ----------------------------------------------------------------------------
 --  Pack unico e organizado com os modulos avulsos deste repositorio.
---  Tudo fica dentro da aba "Xina Core", dividido por secoes:
+--  Tudo fica dentro da aba "Xina", dividido por secoes:
 --
 --    1. COMBATE          -> Attack Players, Auto SD, Safe SD/UE, Combo Attack,
 --                           Fast Paralyze Cure, Destroy Field, Tela Limpa
 --    2. TRAP / MW        -> MW Self Step, Trapa em si, Trapa Alvo WG/MW,
 --                           Force Hold MW/WG, MW Enemy Step, Machete no WG
 --    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita, Pot Friend, Sio Friend
---    4. EQUIPAMENTOS     -> Smart Energy Ring, Energy Ring, Ring Invertido
+--    4. EQUIPAMENTOS     -> Energy Ring, Ring Invertido
 --    5. MOVIMENTACAO     -> Chase, Mount, Invis, Dash, Anti-Push, Flores,
 --
 --    6. UTILITARIOS      -> Pick-Up Items, Stamina, Auto Use Items, Vende Tudo
@@ -99,7 +99,6 @@ local CONFIG = {
   destroyFieldId  = 3148,   -- Destroy Field
   disintegrateId  = 3197,   -- Disintegrate (remove flores ao redor)
   macheteId       = 3308,   -- Machete / Tramontina
-  energyRingId    = 3051,   -- Energy Ring
   trashId         = 3031,   -- Anti-Push: 3031 = Gold | 3035 = Platinum
   flowerIds       = {2981, 2983, 2984, 2985},
 
@@ -111,10 +110,6 @@ local CONFIG = {
   uhMyMinHp       = 90,     -- So cura amigo se o SEU hp estiver acima disso
   utamoDuration   = 180,    -- Duracao do utamo vita (segundos)
   utamoRenewEarly = 20,     -- Renova X segundos antes de acabar
-
-  -- Energy Ring
-  eRingEquipHp    = 40,     -- Equipa abaixo de X% de hp
-  eRingUnequipHp  = 70,     -- Desequipa acima de X% de hp
 
   -- Diversos
   dashDistance    = 5,      -- SQMs por passo do Bug Map Dash
@@ -129,7 +124,7 @@ local CONFIG = {
 -- ============================================================================
 -- INFRAESTRUTURA DA ABA
 -- ============================================================================
-local TAB = "Xina Core"
+local TAB = "Xina"
 addTab(TAB)
 setDefaultTab(TAB)
 
@@ -478,8 +473,8 @@ end)
 -- 1.8 Combo Attack por missil -------------------------------------------------
 do
 -- ============================================================================
--- COMBO ATTACK COM LÍDERES (DETECÇÃO DE MÍSSIL/SD)
--- Ataca automaticamente o mesmo alvo do líder no momento em que sai o míssil
+-- COMBO ATTACK COM LIDERES (DETECÇÃO DE MÍSSIL/SD)
+-- Ataca automaticamente o mesmo alvo do lider no momento em que sai o míssil
 -- ============================================================================
 
 storage.xcComboAttack = storage.xcComboAttack or {}
@@ -491,17 +486,17 @@ comboSettings.LeaderName = comboSettings.LeaderName or "Leader1"
 comboSettings.LeaderName2 = comboSettings.LeaderName2 or "Leader2"
 comboSettings.LeaderName3 = comboSettings.LeaderName3 or "Leader3"
 
-addLabel("", "Líder 1:")
+addLabel("", "Lider 1:")
 addTextEdit("TxtEditLeader1", comboSettings.LeaderName or "Leader1", function(widget, text)
   comboSettings.LeaderName = text
 end)
 
-addLabel("", "Líder 2:")
+addLabel("", "Lider 2:")
 addTextEdit("TxtEditLeader2", comboSettings.LeaderName2 or "Leader2", function(widget, text)
   comboSettings.LeaderName2 = text
 end)
 
-addLabel("", "Líder 3:")
+addLabel("", "Lider 3:")
 addTextEdit("TxtEditLeader3", comboSettings.LeaderName3 or "Leader3", function(widget, text)
   comboSettings.LeaderName3 = text
 end)
@@ -1639,29 +1634,7 @@ end)
 -- ============================================================================
 section("Equipamentos")
 
--- 4.1 Smart Energy Ring ------------------------------------------------------
-macro(50, "Smart Energy Ring", function()
-  local hp = hppercent()
-  local ring = getFinger()
-
-  if hp <= CONFIG.eRingEquipHp then
-    if not ring or ring:getId() ~= CONFIG.energyRingId then
-      g_game.equipItemId(CONFIG.energyRingId)
-      delay(250) -- evita spam de pacotes enquanto o servidor confirma o slot
-    end
-  elseif hp >= CONFIG.eRingUnequipHp then
-    if ring and ring:getId() == CONFIG.energyRingId then
-      local bp = getBack()
-      if bp then
-        g_game.move(ring, bp:getPosition(), 1)
-        delay(250)
-      end
-    end
-  end
-end)
-
-
--- 4.2 Energy Ring ---------------------------------------------------
+-- 4.1 Energy Ring ---------------------------------------------------
 do
 -- ============================================================================
 -- EMERGENCY ENERGY RING SWAPPER (COM SETUP WINDOW)
@@ -1833,7 +1806,7 @@ macro(250, function()
 end)
 end
 
--- 4.3 Ring Invertido ------------------------------------------------------
+-- 4.2 Ring Invertido ------------------------------------------------------
 do
 -- ============================================================================
 -- SMART RING SWAPPER (RING INVERTIDO - COM SETUP WINDOW)
