@@ -8,7 +8,7 @@
 --    1. COMBATE          -> Attack Players, Auto SD, Safe SD/UE, New Combo Leader,
 --                           Destroy Field, Tela Limpa
 --    2. TRAP / MW        -> MW Self Step, Trapa em si, Trapa Alvo WG/MW,
---                           Force Hold MW/WG, MW Enemy Step, Machete no WG
+--                           MW Enemy Step, Machete no WG
 --    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita, Pot Friend, Sio Friend
 --    4. EQUIPAMENTOS     -> Energy Ring, Ring Invertido
 --    7. HUD & INTERFACE  -> Coordenadas no minimapa,
@@ -18,9 +18,13 @@
 --    5. MOVIMENTACAO     -> Chase, Mount, Invis, Dash, Anti-Push, Flores
 --    6. UTILITARIOS      -> Pick-Up Items, Stamina, Auto Use Items, Vende Tudo
 --
---  Ficaram de fora Trap WG diagonais e o Timer visual de MW (gastam runa a
---  toa / podem gerar lag), alem do Fast Paralyze Cure e do Target HUD.
---  Todos continuam disponiveis como scripts avulsos.
+--  Ficaram de fora o Force Hold MW/WG, o Trap WG diagonais e o Timer visual
+--  de MW (gastam runa a toa / podem gerar lag), alem do Fast Paralyze Cure e
+--  do Target HUD. Todos continuam disponiveis como scripts avulsos.
+--
+--  ALCANCE DAS TRAPS: Trapa Alvo WG/MW e MW Enemy Step so lancam runa dentro
+--  de CONFIG.trapMaxDistance (3 SQMs). Isso impede que o personagem ANDE ate
+--  o SQM para conseguir usar a runa quando o alvo esta longe.
 --
 --  Todos os modulos comecam DESLIGADOS. Ligue pelo painel do bot ou pelos
 --  icones na tela. Os modulos configuraveis possuem um botao Setup proprio.
@@ -108,6 +112,11 @@ local CONFIG = {
   -- Combate
   sdMaxDistance   = 7,      -- Distancia maxima para soltar SD no alvo
 
+  -- Trap / MW
+  trapMaxDistance = 3,      -- Alcance maximo (SQMs) de MW/WG automatico.
+                            -- Mantenha baixo: o server faz o personagem ANDAR
+                            -- ate o SQM quando a runa e usada longe demais.
+
   -- Cura
   uhMyMinHp       = 90,     -- So cura amigo se o SEU hp estiver acima disso
   utamoDuration   = 180,    -- Duracao do utamo vita (segundos)
@@ -171,6 +180,15 @@ local function useRuneOnTile(runeId, tile)
   if not target then return false end
   useWith(runeId, target)
   return true
+end
+
+-- Confere se o SQM esta perto o bastante para a runa sair na hora. Usar runa
+-- em SQM distante faz o server te OBRIGAR a andar ate la; por isso os modulos
+-- de trap so lancam dentro de CONFIG.trapMaxDistance (padrao 3 SQMs).
+local function inTrapRange(fromPos, targetPos, maxDistance)
+  if not fromPos or not targetPos then return false end
+  if fromPos.z ~= targetPos.z then return false end
+  return getDistanceBetween(fromPos, targetPos) <= (maxDistance or CONFIG.trapMaxDistance)
 end
 
 -- ============================================================================
@@ -1029,338 +1047,7 @@ if claimSharedIcon("machete") then
     end))
 end
 
-
--- 2.4 Force Hold MW / WG ------------------------------------------------------
-do
--- ============================================================================
--- FAST FORCE HOLD MW & WG (COM SETUP WINDOW)
--- Tested on OTCv8 3.2 / vBot 4.8
--- ============================================================================
-
-storage.xcForceHoldSettings = storage.xcForceHoldSettings or {
-  enabled = false,
-  mwHotkey = "f3",
-  wgHotkey = "f4",
-  mwId = 3180,
-  wgId = 3156,
-  preCastTime = 180
-}
-local config = storage.xcForceHoldSettings
-
-local mwDuration = 20000
-local wgDuration = 45000
-
-storage.xcMwPoses = type(storage.xcMwPoses) == "table" and storage.xcMwPoses or {}
-storage.xcWgPoses = type(storage.xcWgPoses) == "table" and storage.xcWgPoses or {}
-
-local wallTimers = {}
-local lastCast = {}
-local lastWallText = {}
-
-local wallIds = {
-  [2128] = true, [2129] = true, [2130] = true, [2131] = true,
-  [1497] = true, [1498] = true, [9598] = true, [9599] = true,
-  [10187] = true, [10188] = true, [10189] = true
-}
-
-if xcForceHoldWindow then xcForceHoldWindow:destroy() end
-
-g_ui.loadUIFromString([[
-XcForceHoldWindow < MainWindow
-  text: Force Hold Setup
-  size: 220 250
-  @onEscape: self:hide()
-  layout:
-    type: verticalBox
-    fit-children: true
-
-  Label
-    text-align: center
-    text: Hotkey MW / WG:
-    margin-top: 5
-
-  Panel
-    height: 30
-    margin-top: 3
-
-    TextEdit
-      id: mwKeyText
-      anchors.left: parent.left
-      anchors.top: parent.top
-      width: 90
-      text-align: center
-
-    TextEdit
-      id: wgKeyText
-      anchors.right: parent.right
-      anchors.top: parent.top
-      width: 90
-      text-align: center
-
-  HorizontalSeparator
-    margin-top: 5
-
-  Label
-    id: precastLabel
-    text-align: center
-    text: Pre-cast: 180ms
-    margin-top: 3
-
-  HorizontalScrollBar
-    id: precastScroll
-    minimum: 50
-    maximum: 400
-    step: 10
-    margin-top: 3
-
-  HorizontalSeparator
-    margin-top: 8
-
-  Button
-    id: cleanBtn
-    text: Clean Positions
-    margin-top: 3
-    height: 20
-
-  Button
-    id: closeButton
-    text: Close
-    font: cipsoftFont
-    margin-top: 5
-    margin-left: 155
-    width: 45
-    height: 21
-]])
-
-xcForceHoldWindow = UI.createWindow('XcForceHoldWindow', g_ui.getRootWidget())
-xcForceHoldWindow:hide()
-
-local function xcfhChild(id)
-  local w = xcForceHoldWindow:recursiveGetChildById(id)
-  if not w then
-    error("[ForceHold] widget nao encontrado na UI: " .. tostring(id))
-  end
-  return w
-end
-
-local xc_mwKeyText = xcfhChild('mwKeyText')
-local xc_wgKeyText = xcfhChild('wgKeyText')
-local xc_precastScroll = xcfhChild('precastScroll')
-local xc_precastLabel = xcfhChild('precastLabel')
-local xc_cleanBtn = xcfhChild('cleanBtn')
-local xc_closeButton = xcfhChild('closeButton')
-
-
-xc_mwKeyText:setText(config.mwHotkey or "f3")
-xc_mwKeyText.onTextChange = function(w, text)
-  config.mwHotkey = text
-end
-
-xc_wgKeyText:setText(config.wgHotkey or "f4")
-xc_wgKeyText.onTextChange = function(w, text)
-  config.wgHotkey = text
-end
-
-xc_precastScroll:setValue(config.preCastTime or 180)
-xc_precastLabel:setText("Pre-cast: " .. (config.preCastTime or 180) .. "ms")
-xc_precastScroll.onValueChange = function(w, v)
-  config.preCastTime = v
-  xc_precastLabel:setText("Pre-cast: " .. v .. "ms")
-end
-
-xc_cleanBtn.onClick = function()
-  for _, p in ipairs(storage.xcMwPoses) do
-    local tile = g_map.getTile(p)
-    if tile then tile:setText("") end
-  end
-  for _, p in ipairs(storage.xcWgPoses) do
-    local tile = g_map.getTile(p)
-    if tile then tile:setText("") end
-  end
-  storage.xcMwPoses = {}
-  storage.xcWgPoses = {}
-  wallTimers = {}
-  lastCast = {}
-  lastWallText = {}
-end
-
-xc_closeButton.onClick = function()
-  xcForceHoldWindow:hide()
-end
-
-local ui = setupUI([[
-Panel
-  height: 19
-
-  BotSwitch
-    id: title
-    anchors.top: parent.top
-    anchors.left: parent.left
-    text-align: center
-    width: 130
-    !text: tr('Force Hold MW/WG')
-
-  Button
-    id: setup
-    anchors.top: prev.top
-    anchors.left: prev.right
-    anchors.right: parent.right
-    margin-left: 3
-    height: 17
-    text: Setup
-]], parent)
-
-ui.title:setOn(config.enabled)
-ui.title.onClick = function(widget)
-  config.enabled = not config.enabled
-  widget:setOn(config.enabled)
-end
-
-ui.setup.onClick = function()
-  xcForceHoldWindow:show()
-  xcForceHoldWindow:raise()
-  xcForceHoldWindow:focus()
-end
-
-local function getKey(pos)
-  return pos.x .. "," .. pos.y .. "," .. pos.z
-end
-
-local function hasWall(tile)
-  if not tile then return false end
-  local items = tile:getItems()
-  if items then
-    for i = 1, #items do
-      local it = items[i]
-      if it and wallIds[it:getId()] then
-        return true
-      end
-    end
-  end
-  local top = tile:getTopThing()
-  if top and top:isItem() and wallIds[top:getId()] then
-    return true
-  end
-  return false
-end
-
-local function castWall(runeId, tile, posKey, duration)
-  local t = millis()
-  if (lastCast[posKey] or 0) + 400 > t then return end
-
-  local target = tile:getTopUseThing() or tile:getGround()
-  if target then
-    useWith(runeId, target)
-    lastCast[posKey] = t
-    wallTimers[posKey] = t + duration
-  end
-end
-
-local function setWallText(tile, key, text)
-  local previous = lastWallText[key]
-  if previous and previous.tile == tile and previous.text == text then return end
-  tile:setText(text)
-  lastWallText[key] = {tile = tile, text = text}
-end
-
--- O menor pre-cast configuravel e 50ms; executar a cada 10ms apenas repetia
--- varreduras e atualizacoes de texto sem melhorar a precisao util.
-macro(50, function()
-  if not config.enabled then return end
-  if #storage.xcMwPoses == 0 and #storage.xcWgPoses == 0 then return end
-  local pPos = pos()
-  local t = millis()
-  local preCast = config.preCastTime or 180
-
-  -- MW Loop
-  for _, mPos in ipairs(storage.xcMwPoses) do
-    if mPos.z == pPos.z and getDistanceBetween(pPos, mPos) <= 7 then
-      local tile = g_map.getTile(mPos)
-      if tile then
-        local key = getKey(mPos)
-        if hasWall(tile) then
-          if not wallTimers[key] then wallTimers[key] = t + mwDuration end
-          local remaining = math.max(0, (wallTimers[key] - t) / 1000)
-          setWallText(tile, key, string.format("MW\n%.1fs", remaining))
-          if (wallTimers[key] - t) <= preCast then
-            castWall(config.mwId or 3180, tile, key, mwDuration)
-          end
-        else
-          setWallText(tile, key, "MW\n0.0s")
-          castWall(config.mwId or 3180, tile, key, mwDuration)
-        end
-      end
-    end
-  end
-
-  -- WG Loop
-  for _, mPos in ipairs(storage.xcWgPoses) do
-    if mPos.z == pPos.z and getDistanceBetween(pPos, mPos) <= 7 then
-      local tile = g_map.getTile(mPos)
-      if tile then
-        local key = getKey(mPos)
-        if hasWall(tile) then
-          if not wallTimers[key] then wallTimers[key] = t + wgDuration end
-          local remaining = math.max(0, (wallTimers[key] - t) / 1000)
-          setWallText(tile, key, string.format("WG\n%.1fs", remaining))
-          if (wallTimers[key] - t) <= preCast then
-            castWall(config.wgId or 3156, tile, key, wgDuration)
-          end
-        else
-          setWallText(tile, key, "WG\n0.0s")
-          castWall(config.wgId or 3156, tile, key, wgDuration)
-        end
-      end
-    end
-  end
-end)
-
-local function togglePos(tbl, label, runeId, duration)
-  local tile = getTileUnderCursor()
-  if not tile then return end
-
-  local p = tile:getPosition()
-  local key = getKey(p)
-  local foundIndex = nil
-
-  for i, storedPos in ipairs(tbl) do
-    if storedPos.x == p.x and storedPos.y == p.y and storedPos.z == p.z then
-      foundIndex = i
-      break
-    end
-  end
-
-  if foundIndex then
-    tile:setText("")
-    table.remove(tbl, foundIndex)
-    wallTimers[key] = nil
-    lastCast[key] = nil
-    lastWallText[key] = nil
-  else
-    table.insert(tbl, {x = p.x, y = p.y, z = p.z})
-    setWallText(tile, key, label)
-
-    local t = millis()
-    if not hasWall(tile) then
-      castWall(runeId, tile, key, duration)
-    else
-      wallTimers[key] = t + duration
-    end
-  end
-end
-
-onKeyDown(function(keys)
-  if not config.enabled then return end
-  keys = keys:lower()
-  if keys == (config.mwHotkey or "f3"):lower() then
-    togglePos(storage.xcMwPoses, "MW", config.mwId or 3180, mwDuration)
-  elseif keys == (config.wgHotkey or "f4"):lower() then
-    togglePos(storage.xcWgPoses, "WG", config.wgId or 3156, wgDuration)
-  end
-end)
-end
-
--- 2.5 Trapa Alvo WG / MW ----------------------------------------------------
+-- 2.4 Trapa Alvo WG / MW ----------------------------------------------------
 do
   storage.xcTargetTrap = storage.xcTargetTrap or {
     enabled = false,
@@ -1471,14 +1158,18 @@ Panel
 
     local playerPos = pos()
     local targetPos = target:getPosition()
+    -- Alcance curto (CONFIG.trapMaxDistance): runa usada longe demais faz o
+    -- personagem ANDAR ate o SQM. Fora do alcance, nao tenta nada.
     if not targetPos or targetPos.z ~= playerPos.z
-      or getDistanceBetween(playerPos, targetPos) > 7 then
+      or getDistanceBetween(playerPos, targetPos) > CONFIG.trapMaxDistance then
       return
     end
 
     for _, offset in ipairs(targetTrapOffsets(playerPos, targetPos)) do
       local tile = tileAt(targetPos, offset[1], offset[2])
-      if tile and tile:isWalkable(false) and not hasWall(tile) then
+      -- O SQM da trap tambem precisa estar dentro do alcance, senao o char anda
+      if tile and inTrapRange(playerPos, tile:getPosition())
+        and tile:isWalkable(false) and not hasWall(tile) then
         if useRuneOnTile(config.runeId, tile) then
           delay(200)
           return
@@ -1488,7 +1179,7 @@ Panel
   end)
 end
 
--- 2.6 MW Enemy Step -----------------------------------------------------------
+-- 2.5 MW Enemy Step -----------------------------------------------------------
 do
 -- ============================================================================
 -- AUTO MW NO STEP DO INIMIGO (COM SETUP WINDOW)
@@ -1608,7 +1299,9 @@ onCreaturePositionChange(function(creature, newPos, oldPos)
     if not localPlayer then return end
     local myPosition = localPlayer:getPosition()
 
-    if oldPos and oldPos.z == myPosition.z and getDistanceBetween(myPosition, oldPos) <= 7 then
+    -- So joga MW em SQM dentro de CONFIG.trapMaxDistance (3). Mais longe que
+    -- isso o server faria o personagem ANDAR ate o SQM para usar a runa.
+    if oldPos and inTrapRange(myPosition, oldPos) then
       local tile = g_map.getTile(oldPos)
       if tile and tile:isWalkable() then
         local target = tile:getTopUseThing() or tile:getGround()

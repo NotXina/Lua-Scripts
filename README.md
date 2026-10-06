@@ -89,7 +89,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina`) em 7 seções. Na aba `Xina` ficam combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**) e HUD. Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Auto Use Items**, **Vende Tudo** com runa de venda arrastável). Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. Fast Paralyze Cure e Target HUD ficam apenas nos scripts avulsos. |
+| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina`) em 7 seções. Na aba `Xina` ficam combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **MW Enemy Step**, Machete — traps lançam runa só até 3 SQMs, para o personagem nunca andar atrás do alvo), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**) e HUD. Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Auto Use Items**, **Vende Tudo** com runa de venda arrastável). Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. Fast Paralyze Cure, Target HUD e Force Hold MW/WG ficam apenas nos scripts avulsos. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (mantém a área e só troca para SD quando um jogador próximo tem shield diferente do seu), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand selecionável por arraste e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
@@ -118,7 +118,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | Script | Descrição |
 |---|---|
 | **MWSelfStep.lua** | Joga Magic Wall no SQM que você acabou de deixar, trapando quem está te perseguindo. |
-| **AutoMwEnemyStep.lua** | Joga Magic Wall no próximo passo do inimigo, prevendo o movimento. Com janela de setup para o ID da runa. |
+| **AutoMwEnemyStep.lua** | Joga Magic Wall no SQM que o inimigo acabou de deixar, até 3 SQMs de distância (assim o personagem nunca anda para usar a runa). Com janela de setup para o ID da runa. |
 | **TrapEmSiMw.lua** | Preenche os 8 SQMs ao redor do próprio personagem com Magic Wall. Hotkey: `NumPad5`. |
 | **TrapWgDiagonals.lua** | Joga Wild Growth nas 4 diagonais do alvo para impedir a fuga em diagonal. |
 | **FastForceHoldMwWg.lua** | Força MW e WG em posições marcadas, mantendo a parede sempre renovada. Hotkeys configuráveis (padrão `F3` para MW e `F4` para WG). |
@@ -205,7 +205,7 @@ HUD está disponível no script avulso `TargetHUD.lua` (e no PvPUltimatePack).
 |---|---|---|
 | `Delete` | Attack Players / Attack All | AttackPlayersLowestHp, WarPwPack, XinaPackNew, XinaCorePack |
 | `F1` | Machete no Wild Growth | MacheteWg, IconesDashPack, XinaCorePack |
-| `F3` / `F4` | Marcar posição de MW / WG | FastForceHoldMwWg, XinaCorePack |
+| `F3` / `F4` | Marcar posição de MW / WG | FastForceHoldMwWg |
 | `F7` | Marcar/desmarcar SQM protegido por flores | ProtegerSqmFlores, WarPwPack |
 | `F11` | MW no SQM do alvo | XinaPackNew |
 | `F12` | MW no SQM anterior (Mwall Step) | XinaPackNew |
