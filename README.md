@@ -39,12 +39,13 @@ exato no Guild Chat **`SABOR NESCAU`**:
 
 | Arquivo | Ação do combo |
 |---|---|
-| **`ElfbotComboLeaderSD.txt`** | Ataca o alvo recebido e usa a SD `3155`. |
+| **`ElfbotComboLeaderSD.txt`** | Ataca o alvo recebido e usa a runa configurável `$cl_runeid` (padrão `14648`). |
 | **`ElfbotComboLeaderSpell.txt`** | Ataca o alvo recebido e usa `exori gran con`. |
 
 Uso rápido das versões com Guild Chat:
 
-1. Abra a versão desejada e altere `Leader1`, `Leader2` e `Leader3`.
+1. Abra a versão desejada e altere `Leader1`, `Leader2` e `Leader3`. Na versão SD,
+   altere `$cl_runeid` caso queira outra runa; o padrão é `14648`.
 2. Cole as linhas em **Hotkeys → Persistent** nos personagens seguidores.
 3. Coloque todos os personagens na mesma guild e abra o canal **SABOR NESCAU**.
 4. No líder, use uma hotkey no momento do disparo:
@@ -67,8 +68,8 @@ o **Aimbot nativo** do ElfBot. Configure nos personagens seguidores:
 - **Trace shots:** ligado
 - **Execute automatically:** ligado
 - **Word triggering enabled:** desligado
-- Versão SD: **Aim Type → Attack + SD Rune**, usando o ID `3155` quando o cliente
-  permitir informar o ID da runa.
+- Versão SD: **Aim Type → Attack + SD Rune** ou a opção de runa equivalente do seu
+  cliente; na versão por script, `$cl_runeid` começa em `14648` e pode ser alterado.
 - Versão Spell: **Aim Type → Attack + Exori Gran Con**, se essa magia aparecer na
   lista de ataques do seu ElfBot.
 
