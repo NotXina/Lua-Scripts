@@ -32,33 +32,34 @@ Coleção de scripts em Lua para **OTClientV8 (OTCv8)** com **vBot**, focados em
 5. Ajuste os **IDs de itens**, **nomes de líderes/amigos** e **hotkeys** no topo de cada
    script (ou pela janela de *Setup*, quando o script tiver uma).
 
-### Script para ElfBot NG
+### Scripts para ElfBot NG
 
-O arquivo **`ElfbotComboLeader.txt`** é uma versão para ElfBot NG com três líderes,
-modo de combo por SD ou por magia configurável e gatilhos pelo **Guild Chat**. As
-hotkeys do ElfBot não possuem um callback `onMissile` equivalente ao `onMissle` do
-vBot; por isso, o líder envia o alvo pelo canal da guild.
+Foram adicionadas duas versões para ElfBot NG, ambas com três líderes e filtro
+exato no Guild Chat **`SABOR NESCAU`**:
+
+| Arquivo | Ação do combo |
+|---|---|
+| **`ElfbotComboLeaderSD.txt`** | Ataca o alvo recebido e usa `sd target`. |
+| **`ElfbotComboLeaderSpell.txt`** | Ataca o alvo recebido e fala a magia configurada em `$cl_spell`. |
 
 Uso rápido:
 
-1. Abra o arquivo e altere `Leader1`, `Leader2`, `Leader3`, `$cl_mode` (`sd` ou
-   `spell`), `$cl_spell` e as duas magias de UE.
+1. Abra a versão desejada e altere `Leader1`, `Leader2`, `Leader3` e as magias de UE.
+   Na versão Spell, altere também `$cl_spell`.
 2. Cole as três linhas em **Hotkeys → Persistent** nos personagens seguidores.
-3. Coloque todos os personagens na mesma guild e abra o Guild Chat.
+3. Coloque todos os personagens na mesma guild e abra o canal **SABOR NESCAU**.
 4. No líder, use uma hotkey no momento do disparo:
    `guildsay 'combo $target.name'`
-5. A mensagem de gatilho da UE também deve ser enviada no **Guild Chat**. O script
-   verifica `$cl_ue_msg.isguild` e lança `$cl_my_ue` no personagem seguidor; `say`
-   continua sendo usado na resposta porque é ele que lança a magia no jogo.
-6. Para SD, também é possível usar o Aimbot nativo do ElfBot: informe os três nomes
-   em **Aim Leaders** separados por vírgulas e selecione **Lock on leader's target**,
-   **Trace shots**, **Execute automatically** e **Attack + SD Rune**. Nesse caso o
-   Aimbot já detecta o tiro de SD e o arquivo não é necessário para o combo de SD.
+5. A mensagem de gatilho da UE também deve ser enviada no canal **SABOR NESCAU**.
+   O script verifica `$cl_ue_msg.isguild` e `$cl_ue_msg.channel == 'SABOR NESCAU'`.
+6. Não use as duas versões simultaneamente no mesmo personagem, para não disparar SD
+   e magia juntos.
 
-No arquivo, `$cl_mode 'sd'` executa `sd target`; troque para `$cl_mode 'spell'`
-para atacar o alvo recebido e dizer `$cl_spell`. O combo e a UE filtram mensagens
-com `$cl_msg.isguild`/`$cl_ue_msg.isguild`, ignorando o canal padrão. A magia de UE
-continua usando `say`, pois ela precisa ser lançada no canal padrão do jogo.
+O combo verifica `$cl_msg.isguild` e `$cl_msg.channel == 'SABOR NESCAU'`, ignorando
+mensagens de outros canais. A resposta continua usando `say`, pois é o comando que
+lança a magia no jogo. As hotkeys do ElfBot não possuem um callback `onMissile`
+equivalente ao `onMissle` do vBot; para SD disparado diretamente pelo míssil, o
+Aimbot nativo do ElfBot continua sendo a alternativa mais precisa.
 
 ---
 
