@@ -11,6 +11,8 @@
 --                           MW Enemy Step, Machete no WG
 --    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita, Pot Friend, Sio Friend
 --    4. EQUIPAMENTOS     -> Energy Ring, Ring Invertido
+--    4.3 AUTO FOLLOW     -> Segue o lider (multi-floor: escadas, buracos,
+--                           corda e levitate)
 --    7. HUD & INTERFACE  -> Coordenadas no minimapa,
 --                           Icones CaveBot / TargetBot, SDMAX / PARAMAX / AVAMAX
 --
@@ -30,7 +32,8 @@
 --  icones na tela. Os modulos configuraveis possuem um botao Setup proprio.
 --
 --  AVISO: nao carregue este pack junto com os scripts avulsos equivalentes
---  (MWSelfStep.lua, PotFriend.lua, AutoSioParty.lua, NewComboLeader.lua, etc)
+--  (MWSelfStep.lua, PotFriend.lua, AutoSioParty.lua, NewComboLeader.lua,
+--  AutoFollow.lua, etc)
 --  para nao duplicar macros, callbacks, swappers e hotkeys.
 --
 --  EXCECAO: o IconesDashPack.lua PODE ficar ligado junto com este pack.
@@ -2112,6 +2115,159 @@ macro(400, function()
     end
   end
 end)
+end
+
+-- ============================================================================
+-- 4.3 AUTO FOLLOW
+-- ============================================================================
+section("Auto Follow")
+
+-- Segue o lider com pathfinding otimizado e multi-floor (escadas, buracos,
+-- corda e levitate). Mesmo modulo do AutoFollow.lua avulso.
+do
+local leaderPositions = {}
+local leaderDirections = {}
+local leader = nil
+local lastLeaderFloor = nil
+local ropeId = 3003
+local standTime = now
+
+-- Migra o nome salvo pelo AutoFollow.lua avulso, se existir
+storage.xcFollowLeader = storage.xcFollowLeader or storage.followLeader
+
+local FloorChangers = {
+  RopeSpots = { Up = {386}, Down = {} },
+  Use = {
+    Up = {1948, 5542, 16693, 16692, 1723, 7771, 5102, 5111, 5120, 9556, 8259, 5131, 8261, 5122},
+    Down = {435}
+  }
+}
+
+local function handleUse(usePos)
+  if not usePos or posz() ~= usePos.z then return end
+  local tile = g_map.getTile(usePos)
+  if tile and tile:getTopUseThing() then
+    g_game.use(tile:getTopUseThing())
+  end
+end
+
+local function handleRope(ropePos)
+  if not ropePos or posz() ~= ropePos.z then return end
+  local tile = g_map.getTile(ropePos)
+  if tile and tile:getTopUseThing() then
+    useWith(ropeId, tile:getTopUseThing())
+  end
+end
+
+local floorChangeSelector = {
+  RopeSpots = {Up = handleRope, Down = handleRope},
+  Use = {Up = handleUse, Down = handleUse}
+}
+
+local function handleFloorChange()
+  local p = player:getPosition()
+  if not p then return false end
+  local range = 1
+
+  for _, dir in ipairs({"Down", "Up"}) do
+    for changer, data in pairs(FloorChangers) do
+      for x = -range, range do
+        for y = -range, range do
+          local checkPos = {x = p.x + x, y = p.y + y, z = p.z}
+          local tile = g_map.getTile(checkPos)
+          if tile and tile:getTopUseThing() then
+            if table.find(data[dir], tile:getTopUseThing():getId()) then
+              floorChangeSelector[changer][dir](checkPos)
+              return true
+            end
+          end
+        end
+      end
+    end
+  end
+  return false
+end
+
+local function levitate(dir)
+  turn(dir)
+  schedule(150, function()
+    say('exani hur "down')
+    say('exani hur "up')
+  end)
+end
+
+xcAutoFollow = macro(150, "Auto Follow", function()
+  local myPos = player:getPosition()
+  if not myPos then return end
+
+  if not leader then
+    local leaderPos = leaderPositions[posz()]
+    if leaderPos and getDistanceBetween(myPos, leaderPos) > 0 then
+      autoWalk(leaderPos, 70, {ignoreNonPathable = true, precision = 0})
+      delay(200)
+      return
+    end
+    if handleFloorChange() then return end
+    local dir = leaderDirections[posz()]
+    if dir then levitate(dir) end
+  else
+    local lpos = leader:getPosition()
+    if not lpos then return end
+    local dist = getDistanceBetween(myPos, lpos)
+
+    if dist > 1 then
+      local params = {ignoreNonPathable = true, precision = 1, ignoreCreatures = true}
+      autoWalk(lpos, 40, params)
+      delay(150)
+    end
+  end
+end)
+
+UI.Label("Follow Player:")
+UI.TextEdit(storage.xcFollowLeader or "Name", function(widget, text)
+  storage.xcFollowLeader = text
+  leader = getCreatureByName(text)
+end)
+
+onCreaturePositionChange(function(creature, newPos, oldPos)
+  if xcAutoFollow.isOff() or not creature then return end
+  local cName = creature:getName()
+  if not cName then return end
+
+  if cName == player:getName() then standTime = now; return end
+  if not storage.xcFollowLeader or cName:lower() ~= storage.xcFollowLeader:lower() then return end
+
+  if newPos then
+    leaderPositions[newPos.z] = newPos
+    lastLeaderFloor = newPos.z
+    leader = (newPos.z == posz()) and creature or nil
+  else
+    leader = nil
+  end
+
+  if oldPos and oldPos.z == posz() then
+    autoWalk(oldPos, 40, {ignoreNonPathable = 1, precision = 1})
+  end
+end)
+
+onCreatureAppear(function(creature)
+  if xcAutoFollow.isOff() or not creature or not storage.xcFollowLeader then return end
+  local cPos = creature:getPosition()
+  if not cPos or cPos.z ~= posz() then return end
+
+  if creature:getName():lower() == storage.xcFollowLeader:lower() then
+    leader = creature
+  end
+end)
+
+onCreatureDisappear(function(creature)
+  if xcAutoFollow.isOff() or not creature or not storage.xcFollowLeader then return end
+  if creature:getName():lower() == storage.xcFollowLeader:lower() then
+    leader = nil
+  end
+end)
+
+addIcon("XC_Follow", {item = {id = 45290, count = 1}, text = "Follow"}, xcAutoFollow)
 end
 
 -- ============================================================================
