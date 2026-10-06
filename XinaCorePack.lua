@@ -2,22 +2,25 @@
 --                       XINA CORE PACK  -  OTCv8 3.2 / vBot 4.8
 -- ----------------------------------------------------------------------------
 --  Pack unico e organizado com os modulos avulsos deste repositorio.
---  Tudo fica dentro da aba "Xina", dividido por secoes:
+--  Os modulos ficam divididos entre as abas "Xina" e "Tools":
 --
+--  ABA "Xina":
 --    1. COMBATE          -> Attack Players, Auto SD, Safe SD/UE, New Combo Leader,
---                           Fast Paralyze Cure, Destroy Field, Tela Limpa
+--                           Destroy Field, Tela Limpa
 --    2. TRAP / MW        -> MW Self Step, Trapa em si, Trapa Alvo WG/MW,
 --                           Force Hold MW/WG, MW Enemy Step, Machete no WG
 --    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita, Pot Friend, Sio Friend
 --    4. EQUIPAMENTOS     -> Energy Ring, Ring Invertido
---    5. MOVIMENTACAO     -> Chase, Mount, Invis, Dash, Anti-Push, Flores,
---
---    6. UTILITARIOS      -> Pick-Up Items, Stamina, Auto Use Items, Vende Tudo
---    7. HUD & INTERFACE  -> Target HUD, Coordenadas no minimapa,
+--    7. HUD & INTERFACE  -> Coordenadas no minimapa,
 --                           Icones CaveBot / TargetBot, SDMAX / PARAMAX / AVAMAX
 --
---  Ficaram de fora somente Trap WG diagonais e o Timer visual de MW
---  (gastam runa a toa / podem gerar lag). Continuam como scripts avulsos.
+--  ABA "Tools":
+--    5. MOVIMENTACAO     -> Chase, Mount, Invis, Dash, Anti-Push, Flores
+--    6. UTILITARIOS      -> Pick-Up Items, Stamina, Auto Use Items, Vende Tudo
+--
+--  Ficaram de fora Trap WG diagonais e o Timer visual de MW (gastam runa a
+--  toa / podem gerar lag), alem do Fast Paralyze Cure e do Target HUD.
+--  Todos continuam disponiveis como scripts avulsos.
 --
 --  Todos os modulos comecam DESLIGADOS. Ligue pelo painel do bot ou pelos
 --  icones na tela. Os modulos configuraveis possuem um botao Setup proprio.
@@ -104,7 +107,6 @@ local CONFIG = {
 
   -- Combate
   sdMaxDistance   = 7,      -- Distancia maxima para soltar SD no alvo
-  cureSpell       = "exura",-- Magia usada para curar paralyze
 
   -- Cura
   uhMyMinHp       = 90,     -- So cura amigo se o SEU hp estiver acima disso
@@ -242,15 +244,7 @@ addMaxRuneIcon("sdMax", "XC_SDMax", CONFIG.sdId, "SDMAX")
 addMaxRuneIcon("paraMax", "XC_ParaMax", CONFIG.paraId, "PARAMAX")
 addMaxRuneIcon("avaMax", "XC_AvaMax", CONFIG.avaId, "AVAMAX")
 
--- 1.4 Fast Paralyze Cure (zero delay) ---------------------------------------
-macro(20, "Fast Paralyze Cure", function()
-  if isParalyzed() then
-    say(CONFIG.cureSpell)
-    delay(100)
-  end
-end)
-
--- 1.5 Auto Destroy Field no pe e flores ao redor -----------------------------
+-- 1.4 Auto Destroy Field no pe e flores ao redor -----------------------------
 local DANGEROUS_FIELDS = {
   [2118] = true, [2119] = true, [2120] = true, -- Fire
   [2123] = true, [2124] = true, [2125] = true, -- Poison
@@ -287,7 +281,7 @@ macro(150, "Auto Destroy Field", function()
 end)
 
 
--- 1.6 Safe SD / UE ------------------------------------------------------------
+-- 1.5 Safe SD / UE ------------------------------------------------------------
 do
 -- ============================================================================
 -- SAFE SD / UE (COM SETUP WINDOW)
@@ -444,7 +438,7 @@ macro(1000, function()
 end)
 end
 
--- 1.7 Tela Limpa ------------------------------------------------------------
+-- 1.6 Tela Limpa ------------------------------------------------------------
 local telaLimpa = macro(100, "Tela Limpa", function() end)
 
 onStaticText(function(thing, text)
@@ -470,7 +464,7 @@ onTextMessage(function(mode, text)
 end)
 
 
--- 1.8 New Combo Leader (combo por missil, com runa ou magia) ------------------
+-- 1.7 New Combo Leader (combo por missil, com runa ou magia) ------------------
 do
 -- ============================================================================
 -- NEW COMBO LEADER
@@ -2428,8 +2422,12 @@ end)
 end
 
 -- ============================================================================
--- 5. MOVIMENTACAO
+-- 5. MOVIMENTACAO (aba Tools)
 -- ============================================================================
+local TOOLS_TAB = "Tools"
+addTab(TOOLS_TAB)
+setDefaultTab(TOOLS_TAB)
+
 section("Movimentacao")
 
 -- 5.1 Auto Chase (sem spam de pacotes) --------------------------------------
@@ -2549,7 +2547,7 @@ end)
 
 
 -- ============================================================================
--- 6. UTILITARIOS E AUTOMACAO
+-- 6. UTILITARIOS E AUTOMACAO (aba Tools)
 -- ============================================================================
 section("Utilitarios & Automacao")
 
@@ -3370,68 +3368,10 @@ end
 -- ============================================================================
 -- 7. HUD & INTERFACE
 -- ============================================================================
+setDefaultTab(TAB)
 section("HUD & Interface")
 
--- 7.1 Target HUD (nick / hp / distancia) -------------------------------------
--- O HUD fica no rootWidget (e nao dentro do painel do bot), no topo central da
--- tela. Ele mostra qualquer criatura atacada, nao apenas jogadores.
-if xcTargetHud then
-  xcTargetHud:destroy()
-  xcTargetHud = nil
-end
-
-xcTargetHud = setupUI([[
-Panel
-  id: xcTargetHud
-  width: 420
-  height: 24
-  background-color: #101010dd
-  border: 1 #ff5555
-  phantom: true
-  anchors.top: parent.top
-  anchors.horizontalCenter: parent.horizontalCenter
-  margin-top: 35
-
-  Label
-    id: text
-    anchors.fill: parent
-    font: verdana-11px-rounded
-    color: #ff5555
-    text-align: center
-    text: "TARGET HUD: nenhum alvo"
-]], g_ui.getRootWidget())
-
-local targetHudText = xcTargetHud:getChildById('text')
-local lastTargetHudText = nil
-xcTargetHud:show()
-xcTargetHud:raise()
-
-macro(100, "Target HUD", function()
-  local target = g_game.getAttackingCreature()
-  local targetPos = target and target:getPosition()
-  local myPos = pos()
-  local newText
-
-  if target and targetPos and myPos then
-    local hp = math.floor(tonumber(target:getHealthPercent()) or 0)
-    local distance = math.floor(getDistanceBetween(myPos, targetPos) or 0)
-    local targetType = target:isPlayer() and "PLAYER" or "CREATURE"
-
-    newText = string.format("ALVO %s: %s | HP: %d%% | DIST: %d",
-      targetType, target:getName() or "?", hp, distance)
-  else
-    -- Deixa uma mensagem curta visivel para confirmar que o HUD esta ativo.
-    newText = "TARGET HUD: ataque um alvo para ver HP e distancia"
-  end
-
-  -- Evita invalidar/redesenhar o widget 10 vezes por segundo sem mudanca.
-  if newText ~= lastTargetHudText then
-    targetHudText:setText(newText)
-    lastTargetHudText = newText
-  end
-end)
-
--- 7.2 Coordenadas no minimapa ------------------------------------------------
+-- 7.1 Coordenadas no minimapa ------------------------------------------------
 if modules.game_minimap and modules.game_minimap.minimapWidget then
   local minimap = modules.game_minimap.minimapWidget
   local coordLabel = minimap.coords or g_ui.loadUIFromString([[
@@ -3460,7 +3400,7 @@ Label
   end)
 end
 
--- 7.3 Icones CaveBot / TargetBot com indicador ON-OFF ------------------------
+-- 7.2 Icones CaveBot / TargetBot com indicador ON-OFF ------------------------
 -- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
 if claimSharedIcon("caveTargetIcons") then
   local cIcon, tIcon
