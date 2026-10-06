@@ -1,9 +1,10 @@
 -- ============================================================================
 -- VENDE TUDO (OTIMIZADO COM TABELA HASH O(1))
 -- Vende os itens da lista usando a Sell Wand sem travamentos
+-- Runa de venda selecionavel no Setup (arraste o item pro slot)
 -- ============================================================================
 
-local sellWand = 7426
+storage.sellWandId = storage.sellWandId or 7426
 storage.sellEnabled = storage.sellEnabled or 0
 if type(storage.ItemsToSell) ~= "table" then
   storage.ItemsToSell = {
@@ -15,16 +16,35 @@ if type(storage.ItemsToSell) ~= "table" then
   }
 end
 
+local sellIconWidget = nil
+
 if sellSetupWindow then sellSetupWindow:destroy() end
 
 g_ui.loadUIFromString([[
 SellSetupWindow < MainWindow
   text: Vende Tudo - Setup
-  size: 210 180
+  size: 210 260
   @onEscape: self:hide()
   layout:
     type: verticalBox
     fit-children: true
+  Label
+    width: 190
+    text-align: center
+    text: Runa de Venda (arraste)
+    margin-top: 5
+  HorizontalSeparator
+    width: 190
+    margin-top: 3
+  BotItem
+    id: wandSlot
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 5
+    width: 34
+    height: 34
+  HorizontalSeparator
+    width: 190
+    margin-top: 8
   Label
     width: 190
     text-align: center
@@ -61,6 +81,20 @@ sellContainer:setParent(sellSetupWindow.sellContainer)
 sellContainer:fill('parent')
 sellContainer:setItems(storage.ItemsToSell)
 
+local function refreshSellIcon()
+  -- atualiza o desenho do icone com a runa escolhida
+  if sellIconWidget and sellIconWidget.item and storage.sellWandId > 0 then
+    sellIconWidget.item:setItemId(storage.sellWandId)
+    sellIconWidget.item:setItemCount(1)
+  end
+end
+
+sellSetupWindow.wandSlot:setItemId(storage.sellWandId)
+sellSetupWindow.wandSlot.onItemChange = function(w)
+  storage.sellWandId = w:getItemId()
+  refreshSellIcon()
+end
+
 sellSetupWindow.closeButton.onClick = function()
   sellSetupWindow:hide()
 end
@@ -93,6 +127,8 @@ end
 
 macro(200, function()
   if storage.sellEnabled ~= 1 then return end
+  local wandId = storage.sellWandId or 0
+  if wandId <= 0 then return end
 
   local sellMap = {}
   for _, it in ipairs(storage.ItemsToSell) do
@@ -105,7 +141,7 @@ macro(200, function()
     if container then
       for _, item in ipairs(container:getItems() or {}) do
         if sellMap[item:getId()] then
-          useWith(sellWand, item)
+          useWith(wandId, item)
           delay(400)
           return
         end
@@ -114,7 +150,6 @@ macro(200, function()
   end
 end)
 
-local sellIconWidget = nil
 local function sellSetEnabled(val)
   storage.sellEnabled = val and 1 or 0
   sellUI.status:setOn(val)
@@ -127,7 +162,7 @@ sellUI.status.onClick = function()
 end
 
 addIcon("SellIcon", {
-  item = { id = sellWand, count = 1 },
+  item = { id = storage.sellWandId, count = 1 },
   text = "Sell",
 }, function(widget, isOn_)
   sellIconWidget = widget

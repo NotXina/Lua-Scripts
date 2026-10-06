@@ -89,10 +89,10 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina`) em 7 seções. Na aba `Xina` ficam combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**) e HUD. Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Auto Use Items**, **Vende Tudo**). Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. Fast Paralyze Cure e Target HUD ficam apenas nos scripts avulsos. |
+| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina`) em 7 seções. Na aba `Xina` ficam combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **Force Hold MW/WG**, **MW Enemy Step**, Machete), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**) e HUD. Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Auto Use Items**, **Vende Tudo** com runa de venda arrastável). Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. Fast Paralyze Cure e Target HUD ficam apenas nos scripts avulsos. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (mantém a área e só troca para SD quando um jogador próximo tem shield diferente do seu), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
-| **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
+| **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand selecionável por arraste e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
 | **IconesDashPack.lua** | Pack de ícones e deslocamento: Machete/Tramontina no Wild Growth, ícones ON/OFF de CaveBot e TargetBot, Dash (bug map / map click), invisibilidade, auto mount, Utamo Vita com renovação inteligente, Auto Chase e ícones de SD Max, Paralyze Max e Avalanche Max. ✅ Pode ficar ligado **junto com o XinaCorePack.lua** (ver observação abaixo) sem duplicar ícones, macros ou hotkeys. |
 | **XinaPackNew.lua** | Pack geral "+Xina" com aba própria: painel de runas, PvP de Paladin, ícones de CaveBot/TargetBot, Bug Map (DASH), ataque no alvo do líder, MW Step (`F12`), MW Target Step (`F11`), trap de MW no alvo, anti-push, potar amigo e Attack All (`Delete`). |
 
@@ -172,8 +172,8 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | Script | Descrição |
 |---|---|
 | **PickUpItems.lua** | Cata itens do chão por lista de IDs, com raio configurável e escolha do container de destino. Com janela de setup. |
-| **Seller.lua** | Vende itens de uma lista usando a Sell Wand, com container editável para escolher os itens. |
-| **VendeTudo.lua** | Versão otimizada do seller, com busca em tabela hash O(1) e janela de setup — vende listas grandes sem travar o client. |
+| **Seller.lua** | Vende itens de uma lista usando a Sell Wand, com container editável para escolher os itens e slot arrastável para escolher a runa de venda. |
+| **VendeTudo.lua** | Versão otimizada do seller, com busca em tabela hash O(1) e janela de setup — vende listas grandes sem travar o client. A runa de venda é escolhida arrastando o item pro slot no Setup. |
 | **StaminaItems.lua** | Usa itens de regeneração de stamina automaticamente dentro de uma faixa configurável (ex.: entre 0 e 40 horas). |
 | **AutoUseItems.lua** | Fora de PZ, usa em ordem todos os itens configurados nos 15 slots e repete o ciclo a cada intervalo de 1 a 60 minutos. Se entrar em PZ durante o ciclo, pausa e continua ao sair. Com janela de setup. |
 

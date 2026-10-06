@@ -3234,9 +3234,10 @@ do
 -- ============================================================================
 -- VENDE TUDO (OTIMIZADO COM TABELA HASH O(1))
 -- Vende os itens da lista usando a Sell Wand sem travamentos
+-- Runa de venda selecionavel no Setup (arraste o item pro slot)
 -- ============================================================================
 
-local sellWand = 7426
+storage.xcSellWandId = storage.xcSellWandId or 7426
 storage.xcSellEnabled = storage.xcSellEnabled or 0
 if type(storage.xcItemsToSell) ~= "table" then
   storage.xcItemsToSell = {
@@ -3253,11 +3254,28 @@ if xcSellSetupWindow then xcSellSetupWindow:destroy() end
 g_ui.loadUIFromString([[
 XcSellSetupWindow < MainWindow
   text: Vende Tudo - Setup
-  size: 210 180
+  size: 210 260
   @onEscape: self:hide()
   layout:
     type: verticalBox
     fit-children: true
+  Label
+    width: 190
+    text-align: center
+    text: Runa de Venda (arraste)
+    margin-top: 5
+  HorizontalSeparator
+    width: 190
+    margin-top: 3
+  BotItem
+    id: wandSlot
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 5
+    width: 34
+    height: 34
+  HorizontalSeparator
+    width: 190
+    margin-top: 8
   Label
     width: 190
     text-align: center
@@ -3311,6 +3329,11 @@ sellContainer:fill('parent')
 sellContainer:setItems(storage.xcItemsToSell)
 rebuildSellMap()
 
+xcSellSetupWindow.wandSlot:setItemId(storage.xcSellWandId)
+xcSellSetupWindow.wandSlot.onItemChange = function(w)
+  storage.xcSellWandId = w:getItemId()
+end
+
 xcSellSetupWindow.closeButton.onClick = function()
   xcSellSetupWindow:hide()
 end
@@ -3343,13 +3366,15 @@ end
 
 macro(200, function()
   if storage.xcSellEnabled ~= 1 or not hasSellItems then return end
+  local wandId = storage.xcSellWandId or 0
+  if wandId <= 0 then return end
 
   for idx = 0, 15 do
     local container = g_game.getContainer(idx)
     if container then
       for _, item in ipairs(container:getItems() or {}) do
         if sellMap[item:getId()] then
-          useWith(sellWand, item)
+          useWith(wandId, item)
           delay(400)
           return
         end
