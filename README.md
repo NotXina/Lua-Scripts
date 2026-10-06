@@ -35,32 +35,29 @@ Coleção de scripts em Lua para **OTClientV8 (OTCv8)** com **vBot**, focados em
 ### Script para ElfBot NG
 
 O arquivo **`ElfbotComboLeader.txt`** é uma versão para ElfBot NG com três líderes,
-modo de combo por SD ou por magia configurável e UE opcional por mensagem da guild.
-Ele usa o Navigation Server para transportar o alvo do líder, pois as hotkeys do ElfBot
-não possuem um callback `onMissile` equivalente ao `onMissle` do vBot.
+modo de combo por SD ou por magia configurável e gatilhos pelo **Guild Chat**. As
+hotkeys do ElfBot não possuem um callback `onMissile` equivalente ao `onMissle` do
+vBot; por isso, o líder envia o alvo pelo canal da guild.
 
 Uso rápido:
 
 1. Abra o arquivo e altere `Leader1`, `Leader2`, `Leader3`, `$cl_mode` (`sd` ou
    `spell`), `$cl_spell` e as duas magias de UE.
 2. Cole as três linhas em **Hotkeys → Persistent** nos personagens seguidores.
-3. Conecte todos os clientes ao mesmo Navigation Server.
+3. Coloque todos os personagens na mesma guild e abra o Guild Chat.
 4. No líder, use uma hotkey no momento do disparo:
-   `navsay 'combo $target.name'`
-5. A mensagem de gatilho da UE deve ser enviada no **Guild Chat**. O script verifica
-   `$cl_ue_msg.isguild` e lança `$cl_my_ue` no personagem seguidor; `say` continua sendo
-   usado na resposta porque é ele que lança a magia no jogo.
+   `guildsay 'combo $target.name'`
+5. A mensagem de gatilho da UE também deve ser enviada no **Guild Chat**. O script
+   verifica `$cl_ue_msg.isguild` e lança `$cl_my_ue` no personagem seguidor; `say`
+   continua sendo usado na resposta porque é ele que lança a magia no jogo.
 6. Para SD, também é possível usar o Aimbot nativo do ElfBot: informe os três nomes
    em **Aim Leaders** separados por vírgulas e selecione **Lock on leader's target**,
    **Trace shots**, **Execute automatically** e **Attack + SD Rune**. Nesse caso o
    Aimbot já detecta o tiro de SD e o arquivo não é necessário para o combo de SD.
 
 No arquivo, `$cl_mode 'sd'` executa `sd target`; troque para `$cl_mode 'spell'`
-para atacar o alvo recebido e dizer `$cl_spell`. O script personalizado por
-Navigation é necessário para usar uma magia arbitrária como resposta, já que o
-ElfBot não expõe o evento do míssil às hotkeys. Sem Navigation, substitua `navsay`
-por `guildsay` e mantenha `$cl_msg.isnavi` somente se o alvo continuar vindo pelo
-Navigation; para o comando pelo Guild Chat, use `$cl_msg.isguild`. A magia de UE
+para atacar o alvo recebido e dizer `$cl_spell`. O combo e a UE filtram mensagens
+com `$cl_msg.isguild`/`$cl_ue_msg.isguild`, ignorando o canal padrão. A magia de UE
 continua usando `say`, pois ela precisa ser lançada no canal padrão do jogo.
 
 ---
