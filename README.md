@@ -32,6 +32,55 @@ Coleção de scripts em Lua para **OTClientV8 (OTCv8)** com **vBot**, focados em
 5. Ajuste os **IDs de itens**, **nomes de líderes/amigos** e **hotkeys** no topo de cada
    script (ou pela janela de *Setup*, quando o script tiver uma).
 
+### Scripts para ElfBot NG
+
+Foram adicionadas duas versões para ElfBot NG, ambas com três líderes e filtro
+exato no Guild Chat **`SABOR NESCAU`**:
+
+| Arquivo | Ação do combo |
+|---|---|
+| **`ElfbotComboLeaderSD.txt`** | Ataca o alvo recebido e usa a runa configurável `$cl_runeid` (padrão `14648`). |
+| **`ElfbotComboLeaderSpell.txt`** | Ataca o alvo recebido e usa `exori gran con`. |
+
+Uso rápido das versões com Guild Chat:
+
+1. Abra a versão desejada e altere `Leader1`, `Leader2` e `Leader3`. Na versão SD,
+   altere `$cl_runeid` caso queira outra runa; o padrão é `14648`.
+2. Cole as linhas em **Hotkeys → Persistent** nos personagens seguidores.
+3. Coloque todos os personagens na mesma guild e abra o canal **SABOR NESCAU**.
+4. No líder, use uma hotkey no momento do disparo para enviar somente um ponto e o
+   nome do alvo:
+   `guildsay '.$target.name'`
+5. Não use as duas versões simultaneamente no mesmo personagem, para não disparar SD
+   e magia juntos. Nenhuma das duas versões possui UE.
+
+O combo aceita mensagens no formato `.NomeDoTarget`, verifica `$cl_msg.isguild` e
+`$cl_msg.channel == 'SABOR NESCAU'`, e usa o texto depois do ponto como alvo. Mensagens
+de outros canais são ignoradas. A resposta Spell usa `say`, pois é o comando que
+lança a magia no jogo.
+
+#### Modo sem chat
+
+Também é possível fazer o combo sem `guildsay` e sem carregar os arquivos `.txt` usando
+o **Aimbot nativo** do ElfBot. Configure nos personagens seguidores:
+
+- **Aim Leaders:** `Leader1,Leader2,Leader3`
+- **Lock on leader's target:** ligado
+- **Auto combo paralyze/leader target:** ligado
+- **Trace shots:** ligado
+- **Execute automatically:** ligado
+- **Word triggering enabled:** desligado
+- Versão SD: **Aim Type → Attack + SD Rune** ou a opção de runa equivalente do seu
+  cliente; na versão por script, `$cl_runeid` começa em `14648` e pode ser alterado.
+- Versão Spell: **Aim Type → Attack + Exori Gran Con**, se essa magia aparecer na
+  lista de ataques do seu ElfBot.
+
+Nesse modo o ElfBot usa o disparo de SD do líder como gatilho e o canal **SABOR
+NESCAU** não é utilizado. Se `Exori Gran Con` não existir no **Aim Type**, a versão
+padrão do ElfBot não oferece um evento de míssil para uma hotkey personalizada; nesse
+caso, para usar essa magia sincronizada, é necessário o Guild Chat/Navigation ou um
+plugin/build com suporte a esse evento.
+
 ---
 
 ## 📦 Packs completos
