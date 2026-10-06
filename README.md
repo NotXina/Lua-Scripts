@@ -55,6 +55,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 |---|---|
 | **AttackPlayersLowestHp.lua** | Ataca automaticamente o inimigo com **menor HP** e, em caso de empate, o mais próximo. Ignora amigos, membros de party e membros da guild. Hotkey: `Delete`. |
 | **ComboLeader.lua** | Ataque sincronizado de guild: ataca o mesmo alvo que o líder definido estiver atacando. Possui janela de setup. |
+| **NewComboLeader.lua** | Combo avançado para até 3 líderes por detecção de míssil. Pode usar **runa (SD)** ou uma **magia configurável** de forma exclusiva; inclui configuração do míssil-gatilho, alvo do líder e UE por chamada no chat. |
 | **ComboAttackMissile.lua** | Combo por **detecção de míssil**: identifica o disparo (SD/runa) de até 3 líderes configuráveis e ataca o mesmo alvo no exato momento do tiro. |
 | **AutoSdTarget.lua** | Lança Sudden Death automaticamente no alvo atual, respeitando o mesmo andar e distância máxima de 7 SQMs. |
 | **SafeSdMasFrigo.lua** | Mantém a magia de área (`exevo gran mas frigo`) e só troca para SD quando um jogador próximo tem shield diferente do personagem local. O raio de comparação é configurável no setup. |
