@@ -10,23 +10,6 @@ end
 
 local settings = storage.NewComboLeader
 
-LeaderOutfit = json.decode("[{\"name\":\"Azerus\",\"outfit\":{\"feet\":0,\"mount\":0,\"type\":1278,\"legs\":0,\"body\":0,\"addons\":0,\"head\":0}}]")
-EnemyOutfit = json.decode("[{\"name\":\"Demon\",\"outfit\":{\"feet\":0,\"mount\":0,\"type\":35,\"legs\":0,\"body\":0,\"addons\":0,\"head\":0}}]")
-
-function setLeaderOutfit(creature)
-  if creature:isPlayer() then
-    local outfit = LeaderOutfit[math.random(1, #LeaderOutfit)]
-    creature:setOutfit(outfit.outfit)
-  end
-end
-
-function setEnemyOutfit(creature)
-  if creature:isPlayer() then
-    local outfit = EnemyOutfit[math.random(1, #EnemyOutfit)]
-    creature:setOutfit(outfit.outfit)
-  end
-end
-
 -- Defaults
 if settings.enabled == nil then settings.enabled = true end
 if not settings.sdMissle then settings.sdMissle = 32 end
