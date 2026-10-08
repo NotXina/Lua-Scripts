@@ -3,14 +3,17 @@
 -- Tested on OTCv8 3.2 / vBot 4.8
 -- ----------------------------------------------------------------------------
 -- COMPATÍVEL COM XinaCorePack.lua:
--- Machete, ícones de CaveBot/TargetBot, Dash, Invis, Mount, Utamo, Chase e
--- SDMAX/PARAMAX/AVAMAX também existem dentro do XinaCorePack.lua (secoes 2, 3, 5 e 7). Os dois
+-- Machete, Dash, Invis, Mount, Utamo, Chase e
+-- SDMAX/PARAMAX/AVAMAX também existem dentro do XinaCorePack.lua (secoes 2, 3 e 5). Os dois
 -- arquivos podem ficar ligados ao mesmo tempo no mesmo perfil: cada módulo
 -- usa "claimSharedIcon" (ver abaixo) para garantir que só UM dos dois
 -- scripts crie aquele ícone/macro/hotkey. Isso evita ícone duplicado na
 -- tela, hotkey duplicada (ex.: F1 e NumPad0) e o dobro de timers rodando
 -- ao mesmo tempo (= menos lag). Quem carrega primeiro "ganha" o módulo; se
 -- só um dos dois arquivos estiver ativo, ele cria tudo normalmente.
+-- Os ícones de CaveBot/TargetBot (secao 3) tambem existem no XinaCorePack.lua
+-- (secao 7) e no CaveBotTargetBotIcons.lua avulso; a trava acima garante que so
+-- um dos scripts crie os ícones.
 -- ============================================================================
 
 -- ============================================================================
@@ -111,13 +114,28 @@ end
 -- 3. ÍCONES CAVEBOT & TARGETBOT (COM INDICADOR ON/OFF LEVE)
 -- ============================================================================
 if claimSharedIcon("caveTargetIcons") then
-  local cIcon = addIcon("cI", {text = "Cave\nBot", switchable = false, moveable = true}, function()
+  -- Posicao fixa: canto superior esquerdo do mapa, CaveBot em cima e
+  -- TargetBot embaixo (x/y relativos ao painel do mapa, 0.0 - 1.0). O OTCv8
+  -- guarda a posicao arrastada em storage._icons[id]; a entrada e limpa
+  -- antes do addIcon para os icones voltarem SEMPRE para ca ao recarregar.
+  local ICON_POS = {
+    cI = {x = 0.01, y = 0.05}, -- CaveBot
+    tI = {x = 0.01, y = 0.25}, -- TargetBot
+  }
+  storage._icons = storage._icons or {}
+  for id in pairs(ICON_POS) do
+    storage._icons[id] = nil
+  end
+
+  local cIcon = addIcon("cI", {text = "Cave\nBot", switchable = false, moveable = true,
+                               x = ICON_POS.cI.x, y = ICON_POS.cI.y}, function()
     if CaveBot.isOff() then CaveBot.setOn() else CaveBot.setOff() end
   end)
   cIcon:setSize({height = 30, width = 50})
   cIcon.text:setFont('verdana-11px-rounded')
 
-  local tIcon = addIcon("tI", {text = "Target\nBot", switchable = false, moveable = true}, function()
+  local tIcon = addIcon("tI", {text = "Target\nBot", switchable = false, moveable = true,
+                               x = ICON_POS.tI.x, y = ICON_POS.tI.y}, function()
     if TargetBot.isOff() then TargetBot.setOn() else TargetBot.setOff() end
   end)
   tIcon:setSize({height = 30, width = 50})

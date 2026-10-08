@@ -66,8 +66,39 @@ PickupSetupWindow < MainWindow
 pickupSetupWindow = UI.createWindow('PickupSetupWindow', g_ui.getRootWidget())
 pickupSetupWindow:hide()
 
+-- Os mapas de IDs so mudam quando o setup muda. Recria-los a cada ciclo do
+-- macro gerava alocacoes desnecessarias durante toda a execucao do bot.
+local pickMap = {}
+local destBpMap = {}
+local hasPickItems = false
+local hasDestBps = false
+local function rebuildPickMaps()
+  pickMap = {}
+  hasPickItems = false
+  for _, item in ipairs(storage.pickUp or {}) do
+    local id = type(item) == "table" and item.id or item
+    id = tonumber(id)
+    if id and id > 0 then
+      pickMap[id] = true
+      hasPickItems = true
+    end
+  end
+
+  destBpMap = {}
+  hasDestBps = false
+  for _, bp in ipairs(storage.containerpickUp or {}) do
+    local id = type(bp) == "table" and bp.id or bp
+    id = tonumber(id)
+    if id and id > 0 then
+      destBpMap[id] = true
+      hasDestBps = true
+    end
+  end
+end
+
 local pickUpContainer = UI.Container(function(widget, items)
   storage.pickUp = items
+  rebuildPickMaps()
 end, true)
 pickUpContainer:setParent(pickupSetupWindow.pickOnlyPanel)
 pickUpContainer:fill('parent')
@@ -75,10 +106,12 @@ pickUpContainer:setItems(storage.pickUp)
 
 local containerpickUpContainer = UI.Container(function(widget, items)
   storage.containerpickUp = items
+  rebuildPickMaps()
 end, true)
 containerpickUpContainer:setParent(pickupSetupWindow.pickContainerPanel)
 containerpickUpContainer:fill('parent')
 containerpickUpContainer:setItems(storage.containerpickUp)
+rebuildPickMaps()
 
 pickupSetupWindow.closeButton.onClick = function()
   pickupSetupWindow:hide()
@@ -134,44 +167,55 @@ pickUI.btnSetup.onClick = function()
   pickupSetupWindow:focus()
 end
 
--- Macro Otimizado de Pick-Up (200ms com busca rápida O(1))
-macro(200, function()
-  if storage.pickEnabled ~= 1 or freecap() < 150 or not storage.pickUp[1] then return end
+-- Macro de Pick-Up turbinado: ciclo de 50ms que move ATE 5 itens por ciclo
+-- (antes era 1 item a cada 200ms com delay de 250ms). A mochila de destino e
+-- localizada uma vez por ciclo e o slot de cada move usa o maior valor entre
+-- o contador real do container e um contador local, para nao repetir slot
+-- enquanto o client ainda nao confirmou o move anterior. O lote e limitado
+-- pelas vagas livres da mochila de destino.
+local PICK_BATCH = 5   -- itens por ciclo
+local PICK_DELAY = 150 -- ms ate o proximo ciclo apos mover
+macro(50, function()
+  if storage.pickEnabled ~= 1 or freecap() < 150 then return end
+  if not hasPickItems or not hasDestBps then return end
 
-  local pickMap = {}
-  for _, item in ipairs(storage.pickUp) do
-    local id = type(item) == "table" and item.id or item
-    if id then pickMap[id] = true end
+  -- Localiza uma mochila de destino uma vez por ciclo, em vez de repetir a
+  -- busca pelos 16 containers para cada item encontrado no chao.
+  local destination = nil
+  local room = 0
+  for idx = 0, 15 do
+    local container = g_game.getContainer(idx)
+    if container then
+      local cItem = container:getContainerItem()
+      if cItem and destBpMap[cItem:getId()] then
+        room = container:getCapacity() - container:getItemsCount()
+        if room > 0 then
+          destination = container
+          break
+        end
+      end
+    end
   end
-
-  local destBpMap = {}
-  for _, bp in ipairs(storage.containerpickUp) do
-    local id = type(bp) == "table" and bp.id or bp
-    if id then destBpMap[id] = true end
-  end
+  if not destination then return end
 
   local pPos = pos()
   local r = storage.pickRange
+  local batch = math.min(PICK_BATCH, room)
+  local baseSlot = destination:getItemsCount()
+  local moved = 0
 
   for x = -r, r do
     for y = -r, r do
+      if moved >= batch then return end
       local tile = g_map.getTile({x = pPos.x + x, y = pPos.y + y, z = pPos.z})
       if tile then
         for _, item in ipairs(tile:getItems() or {}) do
+          if moved >= batch then return end
           if item and pickMap[item:getId()] then
-            for idx = 0, 15 do
-              local container = g_game.getContainer(idx)
-              if container then
-                local cItem = container:getContainerItem()
-                if cItem and destBpMap[cItem:getId()] then
-                  if container:getItemsCount() < container:getCapacity() then
-                    g_game.move(item, container:getSlotPosition(container:getItemsCount()), item:getCount())
-                    delay(250)
-                    return
-                  end
-                end
-              end
-            end
+            local slot = math.max(destination:getItemsCount(), baseSlot + moved)
+            g_game.move(item, destination:getSlotPosition(slot), item:getCount())
+            moved = moved + 1
+            delay(PICK_DELAY)
           end
         end
       end

@@ -89,7 +89,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **XinaCorePack.lua** | ⭐ Pack completo com aba própria (`Xina`) em 7 seções. Na aba `Xina` ficam combate e combo (Attack Players, Auto SD, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo WG/MW**, **MW Enemy Step**, Machete — traps lançam runa só até 3 SQMs, para o personagem nunca andar atrás do alvo), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**) e HUD. Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items**, **Stamina Items**, **Auto Use Items**, **Vende Tudo** com runa de venda arrastável). Também traz ícones ON/OFF de CaveBot e TargetBot; tudo inicia desligado. Fast Paralyze Cure, Target HUD e Force Hold MW/WG ficam apenas nos scripts avulsos. |
+| **XinaCorePack.lua** | ⭐ Pack completo e **autossuficiente** com aba própria (`Xina`) em 7 seções — não precisa de nenhum outro script. Na aba `Xina` ficam combate e combo (Attack Players, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo MW** (somente Magic Wall), **MW Enemy Step** com alcance ajustável por slider, Machete — a Trapa Alvo lança runa só até 3 SQMs, para o personagem nunca andar atrás do alvo), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**), **Auto Follow** (multi-floor, abre portas fechadas no caminho) e **ícones ON/OFF de CaveBot e TargetBot** (posição fixa no canto superior esquerdo do mapa). Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items** turbinado, **Stamina Items**, **Auto Use Items**, **Vende Tudo** com runa de venda arrastável). Tudo inicia desligado. Fast Paralyze Cure, Target HUD e Force Hold MW/WG ficam apenas nos scripts avulsos. |
 | **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
 | **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (mantém a área e só troca para SD quando um jogador próximo tem shield diferente do seu), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
 | **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand selecionável por arraste e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
@@ -118,7 +118,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | Script | Descrição |
 |---|---|
 | **MWSelfStep.lua** | Joga Magic Wall no SQM que você acabou de deixar, trapando quem está te perseguindo. |
-| **AutoMwEnemyStep.lua** | Joga Magic Wall no SQM que o inimigo acabou de deixar, até 3 SQMs de distância (assim o personagem nunca anda para usar a runa). Com janela de setup para o ID da runa. |
+| **AutoMwEnemyStep.lua** | Joga Magic Wall no SQM que o inimigo acabou de deixar, com alcance ajustável (até 7 SQMs) e ID da runa escolhidos na janela de setup. Mantenha o alcance baixo: runa usada longe demais faz o personagem andar até o SQM. |
 | **TrapEmSiMw.lua** | Preenche os 8 SQMs ao redor do próprio personagem com Magic Wall. Hotkey: `NumPad5`. |
 | **TrapWgDiagonals.lua** | Joga Wild Growth nas 4 diagonais do alvo para impedir a fuga em diagonal. |
 | **FastForceHoldMwWg.lua** | Força MW e WG em posições marcadas, mantendo a parede sempre renovada. Hotkeys configuráveis (padrão `F3` para MW e `F4` para WG). |
@@ -154,7 +154,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 
 | Script | Descrição |
 |---|---|
-| **AutoFollow.lua** | Segue o líder com pathfinding otimizado e suporte multi-floor: escadas, buracos, corda e levitate. |
+| **AutoFollow.lua** | Segue o líder com pathfinding otimizado e suporte multi-floor: escadas, buracos, corda, levitate e **abertura de portas fechadas** no caminho. |
 | **AutoChase.lua** | Mantém o modo Chase sempre ativo, sem spam de pacotes para o servidor. |
 | **AutoMount.lua** | Monta automaticamente ao sair de uma zona protegida (PZ). |
 | **BugMapDash.lua** | Dash pelo mapa segurando `W`, `A`, `S`, `D` ou as setas. Hotkey do ícone: `NumPad0`. |
@@ -186,7 +186,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | **TargetHUD.lua** | Mostra no topo central da tela o nome, tipo, HP% e distância da criatura atacada; sem alvo exibe uma mensagem de espera. |
 | **StatusExpWidget.lua** | Widget compacto e arrastável com status e experiência, salvando a posição na tela entre sessões. |
 | **MinimapCoords.lua** | Exibe as coordenadas X, Y e Z no canto inferior do minimapa. |
-| **CaveBotTargetBotIcons.lua** | Ícones arrastáveis para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). Esses ícones também ficam dentro do XinaCorePack. |
+| **CaveBotTargetBotIcons.lua** | Ícones para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). Posição fixa no canto superior esquerdo do mapa (CaveBot em cima, TargetBot embaixo), recolocada a cada recarregamento; também existem no XinaCorePack (seção 7) e no IconesDashPack. |
 | **TelaLimpa.lua** | Botão para ocultar textos laranjas, efeitos de magias, danos animados, mensagens do sistema e mísseis. Mensagens que contenham `says:` são preservadas. |
 
 ### Como usar o Target HUD

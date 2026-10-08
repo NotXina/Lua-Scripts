@@ -521,8 +521,8 @@ function lanca(x,y)
 	local tpos = target:getPosition()
 	local pos = {x=tpos.x + x, y=tpos.y + y, z=tpos.z}
 	local tile = g_map.getTile(pos)   
-	if tile and tile:isWalkable(false) then -- if can throw magic wall
-		usewith(3180, tile:getGround()) -- use wild growth, magic wall is 3180
+	if tile and tile:isWalkable(false) then -- so coloca magic wall no sqm
+		usewith(3180, tile:getGround()) -- 3180 = runa de Magic Wall
 	return true
 	end
 	return false

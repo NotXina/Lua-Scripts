@@ -1,6 +1,7 @@
 -- ============================================================================
 -- AUTO FOLLOW (PATHFINDING OTIMIZADO & MULTI-FLOOR)
--- Segue o líder subindo e descendo escadas, buracos, corda e levitate
+-- Segue o líder subindo e descendo escadas, buracos, corda e levitate,
+-- abrindo portas fechadas no caminho
 -- ============================================================================
 
 local leaderPositions = {}
@@ -63,6 +64,44 @@ local function handleFloorChange()
   return false
 end
 
+-- Abre portas fechadas no caminho do lider: o autoWalk com
+-- ignoreNonPathable para na frente da porta sem abri-la. Mesma lista de IDs
+-- de portas do "Auto Open Doors" do vBot 4.8.
+local doorIds = { 5007, 8265, 1629, 1632, 5129, 6252, 6249, 7715, 7712, 7714,
+                  7719, 6256, 1669, 1672, 5125, 5115, 5124, 17701, 17710, 1642,
+                  6260, 5107, 4912, 6251, 5291, 1683, 1696, 1692, 5006, 2179, 5116,
+                  1632, 11705, 30772, 30774, 6248, 5735, 5732, 5120, 23873, 5736,
+                  6264, 5122, 30049, 30042, 7727 }
+
+-- Abre uma porta fechada adjacente na direcao do alvo (reta ou diagonal).
+local function openDoorTowards(targetPos)
+  local p = pos()
+  if not p or not targetPos or p.z ~= targetPos.z then return false end
+
+  local dx = targetPos.x - p.x
+  local dy = targetPos.y - p.y
+  if dx == 0 and dy == 0 then return false end
+
+  local dirs = {}
+  if dx ~= 0 then table.insert(dirs, {x = dx > 0 and 1 or -1, y = 0}) end
+  if dy ~= 0 then table.insert(dirs, {x = 0, y = dy > 0 and 1 or -1}) end
+  if dx ~= 0 and dy ~= 0 then
+    table.insert(dirs, {x = dx > 0 and 1 or -1, y = dy > 0 and 1 or -1})
+  end
+
+  for _, d in ipairs(dirs) do
+    local tile = g_map.getTile({x = p.x + d.x, y = p.y + d.y, z = p.z})
+    if tile then
+      local thing = tile:getTopUseThing()
+      if thing and table.find(doorIds, thing:getId()) then
+        g_game.use(thing)
+        return true
+      end
+    end
+  end
+  return false
+end
+
 local function levitate(dir)
   turn(dir)
   schedule(150, function()
@@ -78,6 +117,10 @@ ultimateFollow = macro(150, "Follow", function()
   if not leader then
     local leaderPos = leaderPositions[posz()]
     if leaderPos and getDistanceBetween(myPos, leaderPos) > 0 then
+      if openDoorTowards(leaderPos) then
+        delay(300) -- espera a porta abrir antes de continuar
+        return
+      end
       autoWalk(leaderPos, 70, {ignoreNonPathable = true, precision = 0})
       delay(200)
       return
@@ -91,6 +134,10 @@ ultimateFollow = macro(150, "Follow", function()
     local dist = getDistanceBetween(myPos, lpos)
 
     if dist > 1 then
+      if openDoorTowards(lpos) then
+        delay(300) -- espera a porta abrir antes de continuar
+        return
+      end
       local params = {ignoreNonPathable = true, precision = 1, ignoreCreatures = true}
       autoWalk(lpos, 40, params)
       delay(150)
