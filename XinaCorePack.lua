@@ -5,16 +5,15 @@
 --  Os modulos ficam divididos entre as abas "Xina" e "Tools":
 --
 --  ABA "Xina":
---    1. COMBATE          -> Attack Players, Auto SD, Safe SD/UE, New Combo Leader,
+--    1. COMBATE          -> Attack Players, Safe SD/UE, New Combo Leader,
 --                           Destroy Field, Tela Limpa
---    2. TRAP / MW        -> MW Self Step, Trapa em si, Trapa Alvo WG/MW,
+--    2. TRAP / MW        -> MW Self Step, Trapa em si, Trapa Alvo MW,
 --                           MW Enemy Step, Machete no WG
 --    3. CURA & SUPORTE   -> UH No Time, Renew Utamo Vita, Pot Friend, Sio Friend
 --    4. EQUIPAMENTOS     -> Energy Ring, Ring Invertido
 --    4.3 AUTO FOLLOW     -> Segue o lider (multi-floor: escadas, buracos,
---                           corda e levitate)
---    7. HUD & INTERFACE  -> Coordenadas no minimapa,
---                           Icones CaveBot / TargetBot, SDMAX / PARAMAX / AVAMAX
+--                           corda e levitate), abrindo portas no caminho
+--    7. ÍCONES           -> CaveBot / TargetBot ON-OFF (posição fixa)
 --
 --  ABA "Tools":
 --    5. MOVIMENTACAO     -> Chase, Mount, Invis, Dash, Anti-Push, Flores
@@ -24,9 +23,10 @@
 --  de MW (gastam runa a toa / podem gerar lag), alem do Fast Paralyze Cure e
 --  do Target HUD. Todos continuam disponiveis como scripts avulsos.
 --
---  ALCANCE DAS TRAPS: Trapa Alvo WG/MW e MW Enemy Step so lancam runa dentro
---  de CONFIG.trapMaxDistance (3 SQMs). Isso impede que o personagem ANDE ate
---  o SQM para conseguir usar a runa quando o alvo esta longe.
+--  ALCANCE DAS TRAPS: a Trapa Alvo MW so lanca runa dentro de
+--  CONFIG.trapMaxDistance (3 SQMs) e o MW Enemy Step tem alcance proprio
+--  ajustavel no Setup (slider de SQMs). Isso impede que o personagem ANDE
+--  ate o SQM para conseguir usar a runa quando o alvo esta longe.
 --
 --  Todos os modulos comecam DESLIGADOS. Ligue pelo painel do bot ou pelos
 --  icones na tela. Os modulos configuraveis possuem um botao Setup proprio.
@@ -231,19 +231,7 @@ macro(100, "Attack Players (menor HP)", CONFIG.hkAttackPlayers, function()
   end
 end)
 
--- 1.2 Auto SD no alvo (runas infinitas no server) ---------------------------
-macro(100, "Auto SD no alvo", function()
-  local target = g_game.getAttackingCreature()
-  if not target then return end
-  local tPos = target:getPosition()
-  if not tPos then return end
-  if tPos.z == posz() and getDistanceBetween(pos(), tPos) <= CONFIG.sdMaxDistance then
-    useWith(CONFIG.sdId, target)
-    delay(200)
-  end
-end)
-
--- 1.3 Icones de runas Max (compartilhados com o IconesDashPack.lua) ----------
+-- 1.2 Icones de runas Max (compartilhados com o IconesDashPack.lua) ----------
 -- Cada icone liga/desliga o seu proprio macro e usa a criatura atacada como
 -- alvo. A trava evita que os mesmos tres icones sejam criados duas vezes
 -- quando os dois packs estiverem carregados no mesmo perfil.
@@ -265,7 +253,7 @@ addMaxRuneIcon("sdMax", "XC_SDMax", CONFIG.sdId, "SDMAX")
 addMaxRuneIcon("paraMax", "XC_ParaMax", CONFIG.paraId, "PARAMAX")
 addMaxRuneIcon("avaMax", "XC_AvaMax", CONFIG.avaId, "AVAMAX")
 
--- 1.4 Auto Destroy Field no pe e flores ao redor -----------------------------
+-- 1.3 Auto Destroy Field no pe e flores ao redor -----------------------------
 local DANGEROUS_FIELDS = {
   [2118] = true, [2119] = true, [2120] = true, -- Fire
   [2123] = true, [2124] = true, [2125] = true, -- Poison
@@ -302,7 +290,7 @@ macro(150, "Auto Destroy Field", function()
 end)
 
 
--- 1.5 Safe SD / UE ------------------------------------------------------------
+-- 1.4 Safe SD / UE ------------------------------------------------------------
 do
 -- ============================================================================
 -- SAFE SD / UE (COM SETUP WINDOW)
@@ -459,7 +447,7 @@ macro(1000, function()
 end)
 end
 
--- 1.6 Tela Limpa ------------------------------------------------------------
+-- 1.5 Tela Limpa ------------------------------------------------------------
 local telaLimpa = macro(100, "Tela Limpa", function() end)
 
 onStaticText(function(thing, text)
@@ -485,7 +473,7 @@ onTextMessage(function(mode, text)
 end)
 
 
--- 1.7 New Combo Leader (combo por missil, com runa ou magia) ------------------
+-- 1.6 New Combo Leader (combo por missil, com runa ou magia) ------------------
 do
 -- ============================================================================
 -- NEW COMBO LEADER
@@ -1050,61 +1038,16 @@ if claimSharedIcon("machete") then
     end))
 end
 
--- 2.4 Trapa Alvo WG / MW ----------------------------------------------------
+-- 2.4 Trapa Alvo MW ----------------------------------------------------------
+-- Trapa o alvo SOMENTE com Magic Wall (CONFIG.mwId, padrao 3180). Nao tem mais
+-- escolha de runa nem Wild Growth: a janela de Setup foi removida porque aqui
+-- so se usa MW. Para trocar o ID da runa de MW (ex.: 2293 em 7.4/8.0), ajuste
+-- CONFIG.mwId no topo do arquivo (o mesmo ID do MW Self Step e da Trapa em si).
 do
   storage.xcTargetTrap = storage.xcTargetTrap or {
-    enabled = false,
-    runeId = 3156
+    enabled = false
   }
   local config = storage.xcTargetTrap
-
-  if xcTargetTrapWindow then
-    xcTargetTrapWindow:destroy()
-    xcTargetTrapWindow = nil
-  end
-
-  g_ui.loadUIFromString([[
-XcTargetTrapWindow < MainWindow
-  !text: tr('Trapa Alvo WG/MW Setup')
-  size: 220 165
-  @onEscape: self:hide()
-  layout:
-    type: verticalBox
-    fit-children: true
-
-  Label
-    id: runeLabel
-    text-align: center
-    text: "Runa: 3156 WG / 3180 MW"
-    margin-top: 5
-
-  BotItem
-    id: runeSlot
-    anchors.horizontalCenter: parent.horizontalCenter
-    margin-top: 5
-    size: 34 34
-
-  HorizontalSeparator
-    margin-top: 8
-
-  Button
-    id: closeButton
-    !text: tr('Close')
-    font: cipsoftFont
-    margin-top: 5
-    margin-left: 155
-    size: 45 21
-]])
-
-  xcTargetTrapWindow = UI.createWindow('XcTargetTrapWindow', g_ui.getRootWidget())
-  xcTargetTrapWindow:hide()
-  xcTargetTrapWindow.runeSlot:setItemId(config.runeId)
-  xcTargetTrapWindow.runeSlot.onItemChange = function(widget)
-    config.runeId = widget:getItemId()
-  end
-  xcTargetTrapWindow.closeButton.onClick = function()
-    xcTargetTrapWindow:hide()
-  end
 
   local trapUi = setupUI([[
 Panel
@@ -1117,27 +1060,13 @@ Panel
     text-align: center
     width: 130
     height: 19
-    !text: tr('Trapa Alvo WG/MW')
-
-  Button
-    id: setup
-    anchors.top: title.top
-    anchors.left: title.right
-    anchors.right: parent.right
-    margin-left: 3
-    height: 17
-    !text: tr('Setup')
+    !text: tr('Trapa Alvo MW')
 ]], parent)
 
   trapUi.title:setOn(config.enabled)
   trapUi.title.onClick = function(widget)
     config.enabled = not config.enabled
     widget:setOn(config.enabled)
-  end
-  trapUi.setup.onClick = function()
-    xcTargetTrapWindow:show()
-    xcTargetTrapWindow:raise()
-    xcTargetTrapWindow:focus()
   end
 
   local function targetTrapOffsets(playerPos, targetPos)
@@ -1173,7 +1102,7 @@ Panel
       -- O SQM da trap tambem precisa estar dentro do alcance, senao o char anda
       if tile and inTrapRange(playerPos, tile:getPosition())
         and tile:isWalkable(false) and not hasWall(tile) then
-        if useRuneOnTile(config.runeId, tile) then
+        if useRuneOnTile(CONFIG.mwId, tile) then
           delay(200)
           return
         end
@@ -1191,16 +1120,19 @@ do
 
 storage.xcMwEnemyStep = storage.xcMwEnemyStep or {
   enabled = false,
-  mwId = 3180
+  mwId = 3180,
+  maxDistance = 3
 }
 local config = storage.xcMwEnemyStep
+-- Normaliza o alcance para configs salvos antes do slider existir.
+config.maxDistance = type(config.maxDistance) == "number" and config.maxDistance or 3
 
 if xcMwStepWindow then xcMwStepWindow:destroy() end
 
 g_ui.loadUIFromString([[
 XcMwStepWindow < MainWindow
   text: MW Step Setup
-  size: 210 160
+  size: 210 218
   @onEscape: self:hide()
   layout:
     type: verticalBox
@@ -1221,6 +1153,30 @@ XcMwStepWindow < MainWindow
   HorizontalSeparator
     margin-top: 8
 
+  Label
+    text-align: center
+    text: Alcance maximo (SQMs):
+    margin-top: 5
+
+  HorizontalScrollBar
+    id: distScroll
+    anchors.horizontalCenter: parent.horizontalCenter
+    margin-top: 3
+    width: 160
+    height: 15
+    minimum: 1
+    maximum: 7
+    step: 1
+
+  Label
+    id: distLabel
+    text-align: center
+    margin-top: 3
+    text: ""
+
+  HorizontalSeparator
+    margin-top: 8
+
   Button
     id: closeButton
     text: Close
@@ -1237,6 +1193,14 @@ xcMwStepWindow:hide()
 xcMwStepWindow.mwSlot:setItemId(config.mwId or 3180)
 xcMwStepWindow.mwSlot.onItemChange = function(w)
   config.mwId = w:getItemId()
+end
+
+-- Barra variavel do alcance (quantos SQMs o MW pode ser jogado longe do char).
+xcMwStepWindow.distScroll:setValue(config.maxDistance)
+xcMwStepWindow.distLabel:setText("Distancia: " .. config.maxDistance .. " SQMs")
+xcMwStepWindow.distScroll.onValueChange = function(widget, value)
+  config.maxDistance = value
+  xcMwStepWindow.distLabel:setText("Distancia: " .. value .. " SQMs")
 end
 
 xcMwStepWindow.closeButton.onClick = function()
@@ -1302,9 +1266,12 @@ onCreaturePositionChange(function(creature, newPos, oldPos)
     if not localPlayer then return end
     local myPosition = localPlayer:getPosition()
 
-    -- So joga MW em SQM dentro de CONFIG.trapMaxDistance (3). Mais longe que
-    -- isso o server faria o personagem ANDAR ate o SQM para usar a runa.
-    if oldPos and inTrapRange(myPosition, oldPos) then
+    -- So joga MW em SQM dentro do alcance escolhido no slider do Setup
+    -- (padrao 3). Mais longe que isso o server faria o personagem ANDAR ate
+    -- o SQM para usar a runa.
+    local maxDistance = config.maxDistance or 3
+    if oldPos and oldPos.z == myPosition.z
+      and getDistanceBetween(myPosition, oldPos) <= maxDistance then
       local tile = g_map.getTile(oldPos)
       if tile and tile:isWalkable() then
         local target = tile:getTopUseThing() or tile:getGround()
@@ -2123,7 +2090,8 @@ end
 section("Auto Follow")
 
 -- Segue o lider com pathfinding otimizado e multi-floor (escadas, buracos,
--- corda e levitate). Mesmo modulo do AutoFollow.lua avulso.
+-- corda e levitate), abrindo portas fechadas no caminho. Mesmo modulo do
+-- AutoFollow.lua avulso.
 do
 local leaderPositions = {}
 local leaderDirections = {}
@@ -2188,6 +2156,44 @@ local function handleFloorChange()
   return false
 end
 
+-- Abre portas fechadas no caminho do lider: o autoWalk com
+-- ignoreNonPathable para na frente da porta sem abri-la. Mesma lista de IDs
+-- de portas do "Auto Open Doors" do vBot 4.8.
+local doorIds = { 5007, 8265, 1629, 1632, 5129, 6252, 6249, 7715, 7712, 7714,
+                  7719, 6256, 1669, 1672, 5125, 5115, 5124, 17701, 17710, 1642,
+                  6260, 5107, 4912, 6251, 5291, 1683, 1696, 1692, 5006, 2179, 5116,
+                  1632, 11705, 30772, 30774, 6248, 5735, 5732, 5120, 23873, 5736,
+                  6264, 5122, 30049, 30042, 7727 }
+
+-- Abre uma porta fechada adjacente na direcao do alvo (reta ou diagonal).
+local function openDoorTowards(targetPos)
+  local p = pos()
+  if not p or not targetPos or p.z ~= targetPos.z then return false end
+
+  local dx = targetPos.x - p.x
+  local dy = targetPos.y - p.y
+  if dx == 0 and dy == 0 then return false end
+
+  local dirs = {}
+  if dx ~= 0 then table.insert(dirs, {x = dx > 0 and 1 or -1, y = 0}) end
+  if dy ~= 0 then table.insert(dirs, {x = 0, y = dy > 0 and 1 or -1}) end
+  if dx ~= 0 and dy ~= 0 then
+    table.insert(dirs, {x = dx > 0 and 1 or -1, y = dy > 0 and 1 or -1})
+  end
+
+  for _, d in ipairs(dirs) do
+    local tile = g_map.getTile({x = p.x + d.x, y = p.y + d.y, z = p.z})
+    if tile then
+      local thing = tile:getTopUseThing()
+      if thing and table.find(doorIds, thing:getId()) then
+        g_game.use(thing)
+        return true
+      end
+    end
+  end
+  return false
+end
+
 local function levitate(dir)
   turn(dir)
   schedule(150, function()
@@ -2203,6 +2209,10 @@ xcAutoFollow = macro(150, "Auto Follow", function()
   if not leader then
     local leaderPos = leaderPositions[posz()]
     if leaderPos and getDistanceBetween(myPos, leaderPos) > 0 then
+      if openDoorTowards(leaderPos) then
+        delay(300) -- espera a porta abrir antes de continuar
+        return
+      end
       autoWalk(leaderPos, 70, {ignoreNonPathable = true, precision = 0})
       delay(200)
       return
@@ -2216,6 +2226,10 @@ xcAutoFollow = macro(150, "Auto Follow", function()
     local dist = getDistanceBetween(myPos, lpos)
 
     if dist > 1 then
+      if openDoorTowards(lpos) then
+        delay(300) -- espera a porta abrir antes de continuar
+        return
+      end
       local params = {ignoreNonPathable = true, precision = 1, ignoreCreatures = true}
       autoWalk(lpos, 40, params)
       delay(150)
@@ -2568,22 +2582,32 @@ pickUI.btnSetup.onClick = function()
   xcPickupSetupWindow:focus()
 end
 
--- Macro Otimizado de Pick-Up (200ms com busca rápida O(1))
-macro(200, function()
+-- Macro de Pick-Up turbinado: ciclo de 50ms que move ATE 5 itens por ciclo
+-- (antes era 1 item a cada 200ms com delay de 250ms). A mochila de destino e
+-- localizada uma vez por ciclo e o slot de cada move usa o maior valor entre
+-- o contador real do container e um contador local, para nao repetir slot
+-- enquanto o client ainda nao confirmou o move anterior. O lote e limitado
+-- pelas vagas livres da mochila de destino.
+local PICK_BATCH = 5   -- itens por ciclo
+local PICK_DELAY = 150 -- ms ate o proximo ciclo apos mover
+macro(50, function()
   if storage.xcPickEnabled ~= 1 or freecap() < 150 then return end
   if not hasPickItems or not hasDestBps then return end
 
   -- Localiza uma mochila de destino uma vez por ciclo, em vez de repetir a
   -- busca pelos 16 containers para cada item encontrado no chao.
   local destination = nil
+  local room = 0
   for idx = 0, 15 do
     local container = g_game.getContainer(idx)
     if container then
       local cItem = container:getContainerItem()
-      if cItem and destBpMap[cItem:getId()]
-        and container:getItemsCount() < container:getCapacity() then
-        destination = container
-        break
+      if cItem and destBpMap[cItem:getId()] then
+        room = container:getCapacity() - container:getItemsCount()
+        if room > 0 then
+          destination = container
+          break
+        end
       end
     end
   end
@@ -2591,17 +2615,22 @@ macro(200, function()
 
   local pPos = pos()
   local r = storage.xcPickRange
+  local batch = math.min(PICK_BATCH, room)
+  local baseSlot = destination:getItemsCount()
+  local moved = 0
 
   for x = -r, r do
     for y = -r, r do
+      if moved >= batch then return end
       local tile = g_map.getTile({x = pPos.x + x, y = pPos.y + y, z = pPos.z})
       if tile then
         for _, item in ipairs(tile:getItems() or {}) do
+          if moved >= batch then return end
           if item and pickMap[item:getId()] then
-            local slot = destination:getItemsCount()
+            local slot = math.max(destination:getItemsCount(), baseSlot + moved)
             g_game.move(item, destination:getSlotPosition(slot), item:getCount())
-            delay(250)
-            return
+            moved = moved + 1
+            delay(PICK_DELAY)
           end
         end
       end
@@ -3240,47 +3269,32 @@ end
 end
 
 -- ============================================================================
--- 7. HUD & INTERFACE
+-- 7. ÍCONES CAVEBOT / TARGETBOT (ON/OFF, POSIÇÃO FIXA)
 -- ============================================================================
 setDefaultTab(TAB)
-section("HUD & Interface")
+section("Ícones")
 
--- 7.1 Coordenadas no minimapa ------------------------------------------------
-if modules.game_minimap and modules.game_minimap.minimapWidget then
-  local minimap = modules.game_minimap.minimapWidget
-  local coordLabel = minimap.coords or g_ui.loadUIFromString([[
-Label
-  id: coords
-  color: white
-  font: verdana-11px-rounded
-  anchors.left: parent.left
-  anchors.right: parent.right
-  anchors.bottom: parent.bottom
-  text-align: center
-  margin-right: 3
-  margin-left: 3
-  text: ""
-]], minimap)
-
-  local function updateCoords(newPos)
-    if coordLabel and newPos then
-      coordLabel:setText(newPos.x .. ', ' .. newPos.y .. ', ' .. newPos.z)
-    end
+-- Ícones para ligar/desligar o CaveBot e o TargetBot com indicador ON/OFF.
+-- Posicao fixa no canto superior esquerdo do mapa (CaveBot em cima, TargetBot
+-- embaixo): a posicao arrastada salva em storage._icons e limpa antes do
+-- addIcon, entao os icones voltam SEMPRE para la ao recarregar o script.
+-- A trava "claimSharedIcon" garante que so um dos scripts (este ou o
+-- IconesDashPack.lua) crie os icones quando os dois estao ligados.
+if claimSharedIcon("caveTargetIcons") then
+  local ICON_POS = {
+    XC_Cave = {x = 0.01, y = 0.05},   -- CaveBot
+    XC_Target = {x = 0.01, y = 0.25}, -- TargetBot
+  }
+  storage._icons = storage._icons or {}
+  for id in pairs(ICON_POS) do
+    storage._icons[id] = nil
   end
 
-  updateCoords(pos())
-  onPlayerPositionChange(function(newPos)
-    updateCoords(newPos)
-  end)
-end
-
--- 7.2 Icones CaveBot / TargetBot com indicador ON-OFF ------------------------
--- (compartilhado com o IconesDashPack.lua, ver claimSharedIcon no topo)
-if claimSharedIcon("caveTargetIcons") then
   local cIcon, tIcon
 
   if CaveBot then
-    cIcon = addIcon("XC_Cave", {text = "Cave\nBot", switchable = false, moveable = true}, function()
+    cIcon = addIcon("XC_Cave", {text = "Cave\nBot", switchable = false, moveable = true,
+                                x = ICON_POS.XC_Cave.x, y = ICON_POS.XC_Cave.y}, function()
       if CaveBot.isOff() then CaveBot.setOn() else CaveBot.setOff() end
     end)
     cIcon:setSize({height = 30, width = 50})
@@ -3288,7 +3302,8 @@ if claimSharedIcon("caveTargetIcons") then
   end
 
   if TargetBot then
-    tIcon = addIcon("XC_Target", {text = "Target\nBot", switchable = false, moveable = true}, function()
+    tIcon = addIcon("XC_Target", {text = "Target\nBot", switchable = false, moveable = true,
+                                  x = ICON_POS.XC_Target.x, y = ICON_POS.XC_Target.y}, function()
       if TargetBot.isOff() then TargetBot.setOn() else TargetBot.setOff() end
     end)
     tIcon:setSize({height = 30, width = 50})
