@@ -3272,7 +3272,7 @@ end
 -- 7. ÍCONES CAVEBOT / TARGETBOT (ON/OFF, POSIÇÃO FIXA)
 -- ============================================================================
 setDefaultTab(TAB)
-section("Ícones")
+section("Icones")
 
 -- Ícones para ligar/desligar o CaveBot e o TargetBot com indicador ON/OFF.
 -- Posicao fixa no canto superior esquerdo do mapa (CaveBot em cima, TargetBot
@@ -3280,62 +3280,37 @@ section("Ícones")
 -- addIcon, entao os icones voltam SEMPRE para la ao recarregar o script.
 -- A trava "claimSharedIcon" garante que so um dos scripts (este ou o
 -- IconesDashPack.lua) crie os icones quando os dois estao ligados.
-if claimSharedIcon("caveTargetIcons") then
-  local ICON_POS = {
-    XC_Cave = {x = 0.01, y = 0.05},   -- CaveBot
-    XC_Target = {x = 0.01, y = 0.25}, -- TargetBot
-  }
-  storage._icons = storage._icons or {}
-  for id in pairs(ICON_POS) do
-    storage._icons[id] = nil
+local cIcon = addIcon("cI",{text="Cave\nBot",switchable=false,moveable=true}, function()
+  if CaveBot.isOff() then 
+    CaveBot.setOn()
+  else 
+    CaveBot.setOff()
   end
+end)
+cIcon:setSize({height=30,width=50})
+cIcon.text:setFont('verdana-11px-rounded')
 
-  local cIcon, tIcon
-
-  if CaveBot then
-    cIcon = addIcon("XC_Cave", {text = "Cave\nBot", switchable = false, moveable = true,
-                                x = ICON_POS.XC_Cave.x, y = ICON_POS.XC_Cave.y}, function()
-      if CaveBot.isOff() then CaveBot.setOn() else CaveBot.setOff() end
-    end)
-    cIcon:setSize({height = 30, width = 50})
-    cIcon.text:setFont('verdana-11px-rounded')
+local tIcon = addIcon("tI",{text="Target\nBot",switchable=false,moveable=true}, function()
+  if TargetBot.isOff() then 
+    TargetBot.setOn()
+  else 
+    TargetBot.setOff()
   end
+end)
+tIcon:setSize({height=30,width=50})
+tIcon.text:setFont('verdana-11px-rounded')
 
-  if TargetBot then
-    tIcon = addIcon("XC_Target", {text = "Target\nBot", switchable = false, moveable = true,
-                                  x = ICON_POS.XC_Target.x, y = ICON_POS.XC_Target.y}, function()
-      if TargetBot.isOff() then TargetBot.setOn() else TargetBot.setOff() end
-    end)
-    tIcon:setSize({height = 30, width = 50})
-    tIcon.text:setFont('verdana-11px-rounded')
+macro(50,function()
+  if CaveBot.isOn() then
+    cIcon.text:setColoredText({"CaveBot\n","white","ON","green"})
+  else
+    cIcon.text:setColoredText({"CaveBot\n","white","OFF","red"})
   end
-
-  local lastCaveState, lastTargetState = nil, nil
-  macro(300, function()
-    if cIcon and CaveBot then
-      local caveState = CaveBot.isOn()
-      if caveState ~= lastCaveState then
-        if caveState then
-          cIcon.text:setColoredText({"CaveBot\n", "white", "ON", "green"})
-        else
-          cIcon.text:setColoredText({"CaveBot\n", "white", "OFF", "red"})
-        end
-        lastCaveState = caveState
-      end
-    end
-
-    if tIcon and TargetBot then
-      local targetState = TargetBot.isOn()
-      if targetState ~= lastTargetState then
-        if targetState then
-          tIcon.text:setColoredText({"Target\n", "white", "ON", "green"})
-        else
-          tIcon.text:setColoredText({"Target\n", "white", "OFF", "red"})
-        end
-        lastTargetState = targetState
-      end
-    end
-  end)
-end
+  if TargetBot.isOn() then
+    tIcon.text:setColoredText({"Target\n","white","ON","green"})
+  else
+    tIcon.text:setColoredText({"Target\n","white","OFF","red"})
+  end
+end)
 
 setDefaultTab("Main")
