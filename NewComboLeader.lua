@@ -331,14 +331,6 @@ addItem("SD", "Rune", 3155, leftPanel, "Rune used when Combo Mode is Rune (SD)."
 addLabel("", "To configure the trigger, enable 'Config Trigger' and ask a leader to use the desired rune or spell on a target.", leftPanel)
 addLabel("", "Set Combo Mode to Spell and fill 'Combo Spell' to cast a spell instead of SD.", leftPanel)
 
-addLabel("title", "Macros_Lheow", leftPanel):setColor("green")
-
-local comboInfo = UI.Label("--Combo Attack--", leftPanel)
-comboInfo:setColor("red")
-
-local signatureInfo = UI.Label("~~>> L H E O W <<~~", leftPanel)
-signatureInfo:setColor("blue")
-
 local function lower(value)
   return value and value:lower() or ""
 end
