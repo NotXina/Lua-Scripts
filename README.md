@@ -9,7 +9,6 @@ Coleção de scripts em Lua para **OTClientV8 (OTCv8)** com **vBot**, focados em
 ## Índice
 
 - [Como instalar](#como-instalar)
-- [Packs completos](#-packs-completos)
 - [PvP e combate](#-pvp-e-combate)
 - [Trap, Magic Wall e Wild Growth](#-trap-magic-wall-e-wild-growth)
 - [Cura e suporte](#-cura-e-suporte)
@@ -80,21 +79,6 @@ NESCAU** não é utilizado. Se `Exori Gran Con` não existir no **Aim Type**, a 
 padrão do ElfBot não oferece um evento de míssil para uma hotkey personalizada; nesse
 caso, para usar essa magia sincronizada, é necessário o Guild Chat/Navigation ou um
 plugin/build com suporte a esse evento.
-
----
-
-## 📦 Packs completos
-
-Arquivos que reúnem vários módulos em um só script, geralmente com aba própria e janelas de configuração.
-
-| Script | Descrição |
-|---|---|
-| **XinaCorePack.lua** | ⭐ Pack completo e **autossuficiente** com aba própria (`Xina`) em 7 seções — não precisa de nenhum outro script. Na aba `Xina` ficam combate e combo (Attack Players, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo MW** (somente Magic Wall), **MW Enemy Step** com alcance ajustável por slider, Machete — a Trapa Alvo lança runa só até 3 SQMs, para o personagem nunca andar atrás do alvo), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**), **Auto Follow** (multi-floor, abre portas fechadas no caminho) e **ícones ON/OFF de CaveBot e TargetBot** (posição fixa no canto superior esquerdo do mapa). Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items** turbinado, **Stamina Items**, **Auto Use Items**, **Vende Tudo** com runa de venda arrastável). Tudo inicia desligado. Fast Paralyze Cure, Target HUD e Force Hold MW/WG ficam apenas nos scripts avulsos. |
-| **PvPUltimatePack.lua** | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
-| **WarPwPack.lua** | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (mantém a área e só troca para SD quando um jogador próximo tem shield diferente do seu), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
-| **ToolsPack.lua** | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand selecionável por arraste e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
-| **IconesDashPack.lua** | Pack de ícones e deslocamento: Machete/Tramontina no Wild Growth, ícones ON/OFF de CaveBot e TargetBot, Dash (bug map / map click), invisibilidade, auto mount, Utamo Vita com renovação inteligente, Auto Chase e ícones de SD Max, Paralyze Max e Avalanche Max. ✅ Pode ficar ligado **junto com o XinaCorePack.lua** (ver observação abaixo) sem duplicar ícones, macros ou hotkeys. |
-| **XinaPackNew.lua** | Pack geral "+Xina" com aba própria: painel de runas, PvP de Paladin, ícones de CaveBot/TargetBot, Bug Map (DASH), ataque no alvo do líder, MW Step (`F12`), MW Target Step (`F11`), trap de MW no alvo, anti-push, potar amigo e Attack All (`Delete`). |
 
 ---
 
@@ -186,7 +170,7 @@ Arquivos que reúnem vários módulos em um só script, geralmente com aba próp
 | **TargetHUD.lua** | Mostra no topo central da tela o nome, tipo, HP% e distância da criatura atacada; sem alvo exibe uma mensagem de espera. |
 | **StatusExpWidget.lua** | Widget compacto e arrastável com status e experiência, salvando a posição na tela entre sessões. |
 | **MinimapCoords.lua** | Exibe as coordenadas X, Y e Z no canto inferior do minimapa. |
-| **CaveBotTargetBotIcons.lua** | Ícones para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). Posição fixa no canto superior esquerdo do mapa (CaveBot em cima, TargetBot embaixo), recolocada a cada recarregamento; também existem no XinaCorePack (seção 7) e no IconesDashPack. |
+| **CaveBotTargetBotIcons.lua** | Ícones para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). Posição fixa no canto superior esquerdo do mapa (CaveBot em cima, TargetBot embaixo), recolocada a cada recarregamento. |
 | **TelaLimpa.lua** | Botão para ocultar textos laranjas, efeitos de magias, danos animados, mensagens do sistema e mísseis. Mensagens que contenham `says:` são preservadas. |
 
 ### Como usar o Target HUD
@@ -195,7 +179,7 @@ O Target HUD aparece no topo central da tela. Ele começa mostrando `TARGET HUD:
 para confirmar que está carregado e, ao atacar uma criatura, passa a mostrar nome, tipo, HP e
 distância. Ele acompanha o alvo retornado pelo ataque atual (`g_game.getAttackingCreature()`),
 portanto não mostra informações de uma criatura apenas por passar o mouse sobre ela. O Target
-HUD está disponível no script avulso `TargetHUD.lua` (e no PvPUltimatePack).
+HUD está disponível no script avulso `TargetHUD.lua`.
 
 ---
 
@@ -203,14 +187,12 @@ HUD está disponível no script avulso `TargetHUD.lua` (e no PvPUltimatePack).
 
 | Tecla | Ação | Script |
 |---|---|---|
-| `Delete` | Attack Players / Attack All | AttackPlayersLowestHp, WarPwPack, XinaPackNew, XinaCorePack |
-| `F1` | Machete no Wild Growth | MacheteWg, IconesDashPack, XinaCorePack |
+| `Delete` | Attack Players / Attack All | AttackPlayersLowestHp |
+| `F1` | Machete no Wild Growth | MacheteWg |
 | `F3` / `F4` | Marcar posição de MW / WG | FastForceHoldMwWg |
-| `F7` | Marcar/desmarcar SQM protegido por flores | ProtegerSqmFlores, WarPwPack |
-| `F11` | MW no SQM do alvo | XinaPackNew |
-| `F12` | MW no SQM anterior (Mwall Step) | XinaPackNew |
-| `NumPad0` | Dash / Bug Map | BugMapDash, IconesDashPack, XinaPackNew, XinaCorePack |
-| `NumPad5` | Trapa em si com Magic Wall | TrapEmSiMw, WarPwPack, XinaCorePack |
+| `F7` | Marcar/desmarcar SQM protegido por flores | ProtegerSqmFlores |
+| `NumPad0` | Dash / Bug Map | BugMapDash |
+| `NumPad5` | Trapa em si com Magic Wall | TrapEmSiMw |
 | `NumPad1`–`NumPad9` | Empurrar alvo nas 9 direções | PushMaxIcons |
 
 ---
@@ -218,19 +200,7 @@ HUD está disponível no script avulso `TargetHUD.lua` (e no PvPUltimatePack).
 ## Observações
 
 - Os **IDs de itens e runas** seguem o padrão do Tibia global; em OTServs customizados pode ser
-  necessário ajustá-los no topo de cada script. No XinaCorePack, os ícones usam SD `3155`,
-  Paralyze `3165` e Avalanche `3161`.
+  necessário ajustá-los no topo de cada script.
 - Scripts marcados com *Setup Window* criam uma janela de configuração própria e salvam os
   valores em `storage`, persistindo entre sessões.
-- Vários scripts usam o mesmo módulo (ex.: `MWSelfStep` também existe dentro de
-  `PvPUltimatePack`). Evite carregar o script avulso e o pack ao mesmo tempo para não
-  duplicar macros e hotkeys.
-- **Exceção:** `IconesDashPack.lua` e `XinaCorePack.lua` foram feitos para funcionar
-  ligados ao mesmo tempo. Os dois compartilham os módulos de Machete, ícones de
-  CaveBot/TargetBot, Dash, Invis, Mount, Utamo e Chase através de uma trava global
-  (`xinaSharedIcons` / `claimSharedIcon`): o primeiro script a carregar cria o
-  ícone/macro/hotkey daquele módulo, e o outro detecta e pula a criação — evitando
-  ícone duplicado na tela, hotkey duplicada (ex.: `F1` e `NumPad0`) e o dobro de
-  timers rodando ao mesmo tempo (menos lag). Não importa a ordem em que os dois são
-  carregados.
 - Use por sua conta e risco: automação pode violar as regras do servidor em que você joga.
