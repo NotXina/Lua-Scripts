@@ -2,11 +2,10 @@
 
 Catálogo dos scripts `.lua` para **OTClientV8 / vBot** deste repositório.
 
-**Total: 50 scripts `.lua`**
+**Total: 44 scripts `.lua`**
 
 | Categoria | Quantidade |
 |---|---:|
-| Packs completos | 6 |
 | PvP e combate | 8 |
 | Trap, Magic Wall e Wild Growth | 7 |
 | Cura e suporte | 5 |
@@ -14,20 +13,9 @@ Catálogo dos scripts `.lua` para **OTClientV8 / vBot** deste repositório.
 | Movimentação e empurrão (push) | 10 |
 | Utilitários e automação | 5 |
 | HUD, ícones e interface | 5 |
-| **Total** | **50** |
+| **Total** | **44** |
 
 > Observação: o README cita dois arquivos `.txt` do ElfBot NG (`ElfbotComboLeaderSD.txt` e `ElfbotComboLeaderSpell.txt`) que **não estão versionados** neste repositório, então não entram na contagem.
-
-## Packs completos (6)
-
-| Script | Linhas | Descrição |
-|---|---:|---|
-| `IconesDashPack.lua` | 271 | Pack de ícones e deslocamento: Machete/Tramontina no Wild Growth, ícones ON/OFF de CaveBot e TargetBot, Dash (bug map / map click), invisibilidade, auto mount, Utamo Vita com renovação inteligente, Auto Chase e ícones de SD Max, Paralyze Max e Avalanche Max. ✅ Pode ficar ligado **junto com o XinaCorePack.lua** (ver observação abaixo) sem duplicar ícones, macros ou hotkeys. |
-| `PvPUltimatePack.lua` | 348 | Pack PvP completo com 12 módulos: MW Self Step, Anti-Push, Auto Destroy Field com Disintegrate nas flores ao redor, Wild Growth nas diagonais, SSA & Might Ring swapper, Smart Energy Ring, Fast Paralyze Cure, Combo Leader, Auto SD no target, Auto Sio em amigo, timer visual de MW no chão e HUD do alvo. Configurações centralizadas no topo do arquivo. |
-| `ToolsPack.lua` | 752 | Pack de utilidades: Pick-Up de itens do chão, uso automático de itens de stamina, "Vende Tudo" com Sell Wand selecionável por arraste e Auto Follow com pathfinding multi-floor. Todos com janela de setup própria. |
-| `WarPwPack.lua` | 450 | Pack de guerra com aba própria (`WarPw`): Safe SD/UE (mantém a área e só troca para SD quando um jogador próximo tem shield diferente do seu), ocultar sprites de efeitos, Auto Trap em si com Magic Wall, cura de time (UH e Sio com slider), Auto Attack Players focando o menor HP, Combo Attack com até 3 líderes, proteção de SQM com flores e coordenadas no minimapa. |
-| `XinaCorePack.lua` | 3341 | ⭐ Pack completo e **autossuficiente** com aba própria (`Xina`) em 7 seções — não precisa de nenhum outro script. Na aba `Xina` ficam combate e combo (Attack Players, **ícones SDMAX / PARAMAX / AVAMAX**, Safe SD/UE, Combo Attack por míssil, Tela Limpa), trap (MW Self Step, Trapa em si, **Trapa Alvo MW** (somente Magic Wall), **MW Enemy Step** com alcance ajustável por slider, Machete — a Trapa Alvo lança runa só até 3 SQMs, para o personagem nunca andar atrás do alvo), cura (UH, Utamo, **Pot Friend**, **Sio Friend**), rings (**Energy Ring**, **Ring Invertido**), **Auto Follow** (multi-floor, abre portas fechadas no caminho) e **ícones ON/OFF de CaveBot e TargetBot** (posição fixa no canto superior esquerdo do mapa). Na aba `Tools` ficam movimentação e utilitários (**Pick-Up Items** turbinado, **Stamina Items**, **Auto Use Items**, **Vende Tudo** com runa de venda arrastável). Tudo inicia desligado. Fast Paralyze Cure, Target HUD e Force Hold MW/WG ficam apenas nos scripts avulsos. |
-| `XinaPackNew.lua` | 1035 | Pack geral "+Xina" com aba própria: painel de runas, PvP de Paladin, ícones de CaveBot/TargetBot, Bug Map (DASH), ataque no alvo do líder, MW Step (`F12`), MW Target Step (`F11`), trap de MW no alvo, anti-push, potar amigo e Attack All (`Delete`). |
 
 ## PvP e combate (8)
 
@@ -102,7 +90,7 @@ Catálogo dos scripts `.lua` para **OTClientV8 / vBot** deste repositório.
 
 | Script | Linhas | Descrição |
 |---|---:|---|
-| `CaveBotTargetBotIcons.lua` | 45 | Ícones para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). Posição fixa no canto superior esquerdo do mapa (CaveBot em cima, TargetBot embaixo), recolocada a cada recarregamento; também existem no XinaCorePack (seção 7) e no IconesDashPack. |
+| `CaveBotTargetBotIcons.lua` | 45 | Ícones para ligar/desligar CaveBot e TargetBot, com indicador visual ON (verde) / OFF (vermelho). Posição fixa no canto superior esquerdo do mapa (CaveBot em cima, TargetBot embaixo), recolocada a cada recarregamento. |
 | `MinimapCoords.lua` | 27 | Exibe as coordenadas X, Y e Z no canto inferior do minimapa. |
 | `StatusExpWidget.lua` | 224 | Widget compacto e arrastável com status e experiência, salvando a posição na tela entre sessões. |
 | `TargetHUD.lua` | 56 | Mostra no topo central da tela o nome, tipo, HP% e distância da criatura atacada; sem alvo exibe uma mensagem de espera. |
